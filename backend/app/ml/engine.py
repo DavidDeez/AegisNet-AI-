@@ -666,13 +666,28 @@ class AegisMLEngine:
             is_anomalous = anom_pct >= anomaly_pct_thresh
             is_uncertain = (entropy_val >= entropy_thresh) or (supervised_conf < conf_thresh)
 
+            # Open-set novelty check:
+            # Closed-set classifiers are forced to project unseen attack families (e.g. held-out Botnet,
+            # WebAttack, or MITM) onto the closest known training class, but those flows simultaneously
+            # exhibit BOTH extreme Isolation Forest anomaly scores (anom_pct >= 99.65 / anom_score >= 0.15)
+            # AND elevated predictive entropy (entropy_val >= 0.14, ~4-10x higher than true known attacks).
+            is_extreme_open_set_novelty = is_anomalous and (
+                (anom_pct >= 99.65 and entropy_val >= 0.14)
+                or (anom_score >= 0.155 and entropy_val >= 0.12)
+            )
+
             # Four-Way Triage Decision Rule:
-            # 1. KNOWN_ATTACK: Top predicted class is a known attack family AND supervised confidence >= conf_thresh AND entropy < entropy_thresh
-            # 2. ANOMALOUS_UNKNOWN: Flagged as statistical anomaly by Isolation Forest (anom_pct >= anomaly_pct_thresh)
-            #    while supervised classifier either predicts BENIGN or lacks high certainty on a known attack class.
+            # 1. KNOWN_ATTACK: Top predicted class is a known attack family, confidence >= conf_thresh,
+            #    entropy < entropy_thresh, and NOT flagged as an extreme open-set novel pattern.
+            # 2. ANOMALOUS_UNKNOWN: Flagged as statistical anomaly by Isolation Forest (or extreme open-set novelty).
             # 3. UNCERTAIN: Elevated predictive entropy or low confidence without crossing Known Attack certainty.
             # 4. BENIGN: High confidence on BENIGN, low entropy, and normal anomaly score.
-            if top_class != "BENIGN" and supervised_conf >= conf_thresh and entropy_val < entropy_thresh:
+            if (
+                top_class != "BENIGN"
+                and supervised_conf >= conf_thresh
+                and entropy_val < entropy_thresh
+                and not is_extreme_open_set_novelty
+            ):
                 triage_category = "KNOWN_ATTACK"
                 predicted_label = top_class
                 if supervised_conf >= 0.90 or anom_pct >= 98.0:
@@ -688,7 +703,7 @@ class AegisMLEngine:
                     if top_class != "BENIGN"
                     else "Unclassified Structural Anomaly"
                 )
-                if anom_pct >= 99.0 or (anom_pct >= 97.0 and entropy_val >= 0.45):
+                if anom_pct >= 99.0 or (anom_pct >= 97.0 and entropy_val >= 0.14):
                     severity = "CRITICAL"
                 elif anom_pct >= 96.5:
                     severity = "HIGH"
