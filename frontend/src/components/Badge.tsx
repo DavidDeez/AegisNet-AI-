@@ -6,13 +6,13 @@ export const TriageBadge: React.FC<{ category: TriageCategory }> = ({
 }) => {
   const styles: Record<TriageCategory, string> = {
     KNOWN_ATTACK:
-      'bg-red-500/15 text-red-300 border-red-500/35',
+      'bg-red-500/20 text-red-200 border-red-400/40 shadow-[0_0_12px_rgba(239,68,68,0.22)]',
     ANOMALOUS_UNKNOWN:
-      'bg-purple-500/15 text-purple-300 border-purple-500/35',
+      'bg-purple-500/20 text-purple-200 border-purple-400/40 shadow-[0_0_12px_rgba(168,85,247,0.25)]',
     UNCERTAIN:
-      'bg-amber-500/15 text-amber-300 border-amber-500/35',
+      'bg-amber-500/20 text-amber-200 border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]',
     BENIGN:
-      'bg-emerald-500/15 text-emerald-300 border-emerald-500/35',
+      'bg-emerald-500/20 text-emerald-200 border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.18)]',
   };
 
   const labels: Record<TriageCategory, string> = {
@@ -24,8 +24,8 @@ export const TriageBadge: React.FC<{ category: TriageCategory }> = ({
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-mono font-medium tracking-tight rounded border ${
-        styles[category] || 'bg-slate-800 text-slate-300 border-slate-700'
+      className={`inline-flex items-center px-2.5 py-0.5 text-[11px] font-mono font-medium tracking-tight rounded-full border backdrop-blur-md ${
+        styles[category] || 'bg-slate-800/80 text-slate-200 border-slate-600'
       }`}
     >
       {labels[category] || category}
@@ -37,16 +37,17 @@ export const SeverityBadge: React.FC<{ severity: SeverityLevel }> = ({
   severity,
 }) => {
   const styles: Record<SeverityLevel, string> = {
-    CRITICAL: 'bg-red-950/80 text-red-300 border-red-500/40',
-    HIGH: 'bg-orange-950/80 text-orange-300 border-orange-500/40',
-    MEDIUM: 'bg-amber-950/80 text-amber-300 border-amber-500/40',
-    LOW: 'bg-sky-950/80 text-sky-300 border-sky-500/40',
-    INFO: 'bg-slate-900 text-slate-400 border-slate-700/60',
+    CRITICAL:
+      'bg-red-950/80 text-red-200 border-red-400/50 shadow-[0_0_10px_rgba(239,68,68,0.25)]',
+    HIGH: 'bg-orange-950/80 text-orange-200 border-orange-400/50',
+    MEDIUM: 'bg-amber-950/80 text-amber-200 border-amber-400/50',
+    LOW: 'bg-sky-950/80 text-sky-200 border-sky-400/50',
+    INFO: 'bg-slate-900/70 text-slate-300 border-slate-600/50',
   };
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-mono font-medium rounded border ${
+      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-mono font-medium rounded-md border backdrop-blur-sm ${
         styles[severity] || styles.INFO
       }`}
     >
@@ -57,15 +58,18 @@ export const SeverityBadge: React.FC<{ severity: SeverityLevel }> = ({
 
 export const ReviewBadge: React.FC<{ status: ReviewStatus }> = ({ status }) => {
   const styles: Record<ReviewStatus, string> = {
-    UNREVIEWED: 'bg-slate-800/80 text-slate-300 border-slate-700',
-    CONFIRMED_THREAT: 'bg-red-500/15 text-red-300 border-red-500/35',
-    FALSE_POSITIVE: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35',
-    ESCALATED: 'bg-purple-500/15 text-purple-300 border-purple-500/35',
+    UNREVIEWED: 'bg-slate-800/70 text-slate-300 border-slate-600/60',
+    CONFIRMED_THREAT:
+      'bg-red-500/20 text-red-200 border-red-400/45 shadow-[0_0_10px_rgba(239,68,68,0.2)]',
+    FALSE_POSITIVE:
+      'bg-emerald-500/20 text-emerald-200 border-emerald-400/45',
+    ESCALATED:
+      'bg-purple-500/20 text-purple-200 border-purple-400/45 shadow-[0_0_10px_rgba(168,85,247,0.2)]',
   };
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-mono rounded border ${
+      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-mono rounded-md border backdrop-blur-sm ${
         styles[status] || styles.UNREVIEWED
       }`}
     >
@@ -91,17 +95,17 @@ export const ScoreMeter: React.FC<{
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-400">{label}</span>
-        <span className="font-mono font-medium text-slate-200">{valueText}</span>
+        <span className="text-slate-300">{label}</span>
+        <span className="font-mono font-semibold text-white">{valueText}</span>
       </div>
-      <div className="h-1.5 w-full bg-[#161b22] rounded-full overflow-hidden border border-[#21262d]">
+      <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden border border-white/10 p-[1px]">
         <div
-          className={`h-full transition-all duration-300 ${colorClass}`}
+          className={`h-full rounded-full transition-all duration-300 shadow-[0_0_10px_currentColor] ${colorClass}`}
           style={{ width: `${clamped}%` }}
         />
       </div>
       {subtitle && (
-        <p className="text-[11px] text-slate-500 leading-tight">{subtitle}</p>
+        <p className="text-[11px] text-slate-400 leading-tight">{subtitle}</p>
       )}
     </div>
   );

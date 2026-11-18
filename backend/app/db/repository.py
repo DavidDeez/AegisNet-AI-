@@ -222,6 +222,23 @@ class AegisRepository:
         self.conn.commit()
         return self.get_event_by_uid(event_uid)
 
+    def bulk_update_event_review(
+        self, event_uids: list[str], review_status: str, analyst_notes: str
+    ) -> int:
+        if not event_uids:
+            return 0
+        placeholders = ",".join("?" for _ in event_uids)
+        cur = self.conn.execute(
+            f"""
+            UPDATE network_events
+            SET review_status = ?, analyst_notes = CASE WHEN ? != '' THEN ? ELSE analyst_notes END
+            WHERE event_uid IN ({placeholders})
+            """,
+            [review_status, analyst_notes, analyst_notes, *event_uids],
+        )
+        self.conn.commit()
+        return cur.rowcount
+
     def clear_events(self) -> int:
         cur = self.conn.execute("DELETE FROM network_events")
         self.conn.commit()

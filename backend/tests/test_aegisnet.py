@@ -203,6 +203,24 @@ class TestAegisNetSuite(unittest.TestCase):
         self.assertEqual(r_rev.status_code, 200)
         self.assertEqual(r_rev.json()["review_status"], "CONFIRMED_THREAT")
 
+        # Verify automated defensive mitigation & hunting rules synthesis
+        r_rules = self.client.get(f"/api/v1/events/{event_uid}/mitigation-rules")
+        self.assertEqual(r_rules.status_code, 200)
+        self.assertIn("suricata_rule", r_rules.json())
+        self.assertIn("nftables_command", r_rules.json())
+
+        # Verify bulk review and forensic CSV export
+        r_bulk = self.client.post(
+            "/api/v1/events/bulk-review",
+            json={"event_uids": [event_uid], "review_status": "ESCALATED"},
+        )
+        self.assertEqual(r_bulk.status_code, 200)
+        self.assertEqual(r_bulk.json()["updated_count"], 1)
+
+        r_csv = self.client.get("/api/v1/events/export/csv")
+        self.assertEqual(r_csv.status_code, 200)
+        self.assertIn("event_uid,created_at", r_csv.text)
+
 
 if __name__ == "__main__":
     unittest.main()

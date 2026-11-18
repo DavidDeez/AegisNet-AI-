@@ -8,6 +8,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import PlainTextResponse
 
 from app.core.config import settings
 from app.core.logging_config import logger
@@ -18,6 +19,7 @@ from app.ml.engine import ml_engine
 from app.ml.schema import CANONICAL_FEATURES, FEATURE_DESCRIPTIONS
 from app.schemas.api_models import (
     BenchmarkSliceRequest,
+    BulkEventReviewRequest,
     EventReviewUpdateRequest,
     FlowBatchRequest,
     SystemSettingsUpdateRequest,
@@ -417,6 +419,124 @@ def update_event_review(
             detail=f"Event '{event_uid}' not found.",
         )
     return updated
+
+
+@router.post("/events/bulk-review")
+def bulk_update_event_review(
+    payload: BulkEventReviewRequest,
+    repo: AegisRepository = Depends(get_repo),
+) -> dict[str, Any]:
+    updated_count = repo.bulk_update_event_review(
+        event_uids=payload.event_uids,
+        review_status=payload.review_status,
+        analyst_notes=payload.analyst_notes,
+    )
+    return {
+        "updated_count": updated_count,
+        "review_status": payload.review_status,
+    }
+
+
+@router.get("/events/export/csv", response_class=PlainTextResponse)
+def export_events_csv(
+    triage_category: str | None = Query(default=None),
+    severity: str | None = Query(default=None),
+    repo: AegisRepository = Depends(get_repo),
+) -> PlainTextResponse:
+    """Exports analyzed network events as a forensic CSV report."""
+    res = repo.list_events(
+        limit=500,
+        offset=0,
+        triage_category=triage_category,
+        severity=severity,
+    )
+    items = res["items"]
+    if not items:
+        return PlainTextResponse(
+            "event_uid,created_at,src_ip,src_port,dst_ip,dst_port,protocol,triage_category,predicted_label,severity,supervised_confidence,known_attack_probability,predictive_entropy,anomaly_score,anomaly_percentile,review_status\n",
+            media_type="text/csv",
+        )
+    cols = [
+        "event_uid",
+        "created_at",
+        "src_ip",
+        "src_port",
+        "dst_ip",
+        "dst_port",
+        "protocol",
+        "triage_category",
+        "predicted_label",
+        "ground_truth_label",
+        "severity",
+        "supervised_confidence",
+        "known_attack_probability",
+        "prediction_margin",
+        "predictive_entropy",
+        "anomaly_score",
+        "anomaly_percentile",
+        "review_status",
+        "rationale_text",
+    ]
+    out_df = pd.DataFrame([{c: it.get(c, "") for c in cols} for it in items])
+    return PlainTextResponse(
+        out_df.to_csv(index=False),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": 'attachment; filename="aegisnet_forensic_events.csv"'
+        },
+    )
+
+
+@router.get("/events/{event_uid}/mitigation-rules")
+def get_event_mitigation_rules(
+    event_uid: str,
+    repo: AegisRepository = Depends(get_repo),
+) -> dict[str, Any]:
+    """
+    Synthesizes actionable defensive rules (Suricata IDS signature, nftables/iptables containment,
+    and Zeek telemetry hunting filter) directly from the flow's endpoints, protocol, flags, and triage state.
+    """
+    ev = get_event_detail(event_uid=event_uid, repo=repo)
+    proto = str(ev.get("protocol", "TCP")).lower()
+    src_ip = ev.get("src_ip", "0.0.0.0")
+    dst_ip = ev.get("dst_ip", "10.0.1.10")
+    dst_port = int(ev.get("dst_port", 80))
+    cat = ev.get("triage_category", "UNCERTAIN")
+    pred_lbl = ev.get("predicted_label", "Unknown")
+    conf = float(ev.get("supervised_confidence", 0.0))
+    anom_pct = float(ev.get("anomaly_percentile", 0.0))
+    feats = ev.get("features", {})
+    fwd_pkts = int(feats.get("total_fwd_packets", 10))
+    sid = 9000000 + int(ev.get("id", 1))
+
+    suricata_rule = (
+        f'alert {proto} {src_ip} any -> {dst_ip} {dst_port} '
+        f'(msg:"AEGISNET [{cat}] {pred_lbl} (Conf={conf:.2f}, IF_Pctl=p{anom_pct:.1f})"; '
+        f'flow:to_server; threshold:type both, track by_src, count {max(5, fwd_pkts // 2)}, seconds 30; '
+        f'classtype:attempted-dos; sid:{sid}; rev:1;)'
+    )
+    iptables_rule = (
+        f"iptables -I INPUT -s {src_ip} -p {proto} --dport {dst_port} "
+        f"-m comment --comment \"AegisNet {ev['event_uid']} {cat}\" -j DROP"
+    )
+    nftables_rule = (
+        f"nft add rule inet filter input ip saddr {src_ip} {proto} dport {dst_port} "
+        f"counter drop comment \"AegisNet {ev['event_uid']}\""
+    )
+    zeek_query = (
+        f"zeek-cut ts uid id.orig_h id.orig_p id.resp_h id.resp_p proto service duration orig_bytes resp_bytes conn_state "
+        f"< conn.log | awk '$3 == \"{src_ip}\" && $6 == {dst_port}'"
+    )
+
+    return {
+        "event_uid": ev["event_uid"],
+        "triage_category": cat,
+        "predicted_label": pred_lbl,
+        "suricata_rule": suricata_rule,
+        "iptables_command": iptables_rule,
+        "nftables_command": nftables_rule,
+        "zeek_hunt_query": zeek_query,
+    }
 
 
 @router.delete("/events")

@@ -121,6 +121,46 @@ export const aegisApi = {
       }
     ),
 
+  bulkUpdateEventReview: (
+    eventUids: string[],
+    reviewStatus: ReviewStatus,
+    analystNotes = ''
+  ) =>
+    request<{ updated_count: number; review_status: ReviewStatus }>(
+      '/events/bulk-review',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          event_uids: eventUids,
+          review_status: reviewStatus,
+          analyst_notes: analystNotes,
+        }),
+      }
+    ),
+
+  getEventMitigationRules: (eventUid: string) =>
+    request<{
+      event_uid: string;
+      triage_category: string;
+      predicted_label: string;
+      suricata_rule: string;
+      iptables_command: string;
+      nftables_command: string;
+      zeek_hunt_query: string;
+    }>(`/events/${encodeURIComponent(eventUid)}/mitigation-rules`),
+
+  getExportCsvUrl: (triageCategory?: string, severity?: string) => {
+    const qs = new URLSearchParams();
+    if (triageCategory && triageCategory !== 'ALL') {
+      qs.set('triage_category', triageCategory);
+    }
+    if (severity && severity !== 'ALL') {
+      qs.set('severity', severity);
+    }
+    const queryStr = qs.toString();
+    return `${API_BASE}/events/export/csv${queryStr ? `?${queryStr}` : ''}`;
+  },
+
   clearEvents: () =>
     request<{ deleted_count: number; status: string }>('/events', {
       method: 'DELETE',

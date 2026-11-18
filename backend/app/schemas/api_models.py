@@ -59,6 +59,14 @@ class EventReviewUpdateRequest(BaseModel):
     analyst_notes: str = Field(default="", max_length=2000)
 
 
+class BulkEventReviewRequest(BaseModel):
+    event_uids: list[str] = Field(..., min_length=1, max_length=500)
+    review_status: Literal[
+        "UNREVIEWED", "CONFIRMED_THREAT", "FALSE_POSITIVE", "ESCALATED"
+    ]
+    analyst_notes: str = Field(default="", max_length=2000)
+
+
 class TrainExperimentRequest(BaseModel):
     split_strategy: Literal["group_time_aware", "stratified"] = "group_time_aware"
     held_out_families: list[str] = Field(
