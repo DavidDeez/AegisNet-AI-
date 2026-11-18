@@ -1,6 +1,8 @@
 # AegisNet — AI-Powered Network Intrusion Detection & Threat Intelligence Platform
 
-AegisNet is a full-stack network intrusion detection system (NIDS) and explainable threat intelligence platform built with **FastAPI**, **scikit-learn**, **SHAP**, **SQLite/PostgreSQL**, and **React + TypeScript**.
+**Live Production Deployment:** [https://aegisnet-mvmt.onrender.com/](https://aegisnet-mvmt.onrender.com/)
+
+AegisNet is a full-stack network intrusion detection system (NIDS) and explainable threat intelligence platform built with **FastAPI**, **scikit-learn**, **SHAP**, **SQLite/PostgreSQL**, and **React + TypeScript** featuring a glossy glassmorphic cybersecurity operations interface.
 
 It analyzes network-flow telemetry, classifies known attack families with calibrated probabilities, flags structural anomalies and unseen attack patterns via open-set anomaly detection, quantifies predictive uncertainty using normalized Shannon entropy, and provides global and local TreeSHAP explanations for human analysts.
 
@@ -135,8 +137,12 @@ pytest -v
 | `GET` | `/api/v1/events` | Searchable, filterable, paginated event explorer endpoint |
 | `GET` | `/api/v1/events/{event_uid}` | Full single-event inspection (24 flow attributes, probabilities, and local TreeSHAP) |
 | `PATCH` | `/api/v1/events/{event_uid}/review` | Update analyst disposition (`UNREVIEWED`, `CONFIRMED_THREAT`, `FALSE_POSITIVE`, `ESCALATED`) |
+| `POST` | `/api/v1/events/bulk-review` | Bulk update analyst dispositions across multiple selected flow events |
+| `GET` | `/api/v1/events/{event_uid}/mitigation-rules` | Synthesize Suricata IDS rule, Linux `nftables`/`iptables` commands, and Zeek hunt filter |
+| `GET` | `/api/v1/events/export/csv` | Export analyzed network flow events and all 4 separated risk/uncertainty scores as CSV |
 | `GET` | `/api/v1/explainability/global` | Global `mean(|SHAP|)` and Gini feature importance rankings |
 | `GET` | `/api/v1/explainability/event/{event_uid}` | Local additive TreeSHAP waterfall attribution for a specific flow |
+| `POST` | `/api/v1/explainability/event/{event_uid}/ai-brief` | Generate a Fireworks AI (or deterministic offline) SOC Incident Brief grounded in TreeSHAP |
 | `GET` | `/api/v1/models` | Active model run, historical runs, confusion matrix, calibration, and open-set metrics |
 | `POST` | `/api/v1/models/train` | Trigger a reproducible training & open-set evaluation run |
 | `GET` | `/api/v1/monitoring` | Inference latency (avg/p95/max), Population Stability Index (PSI) feature drift, and errors |
