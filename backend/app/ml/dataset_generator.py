@@ -125,8 +125,8 @@ def _synthesize_cicids_flow_profile(
         duration = float(rng.lognormal(mean=10.2, sigma=1.4))
         fwd_pkts = int(max(1, rng.poisson(lam=11)))
         bwd_pkts = int(max(1, rng.poisson(lam=12)))
-        fwd_len_mean = float(rng.normal(loc=240.0, scale=85.0).clip(40.0, 1460.0))
-        bwd_len_mean = float(rng.normal(loc=520.0, scale=180.0).clip(52.0, 1460.0))
+        fwd_len_mean = float(np.clip(rng.normal(loc=240.0, scale=85.0), 40.0, 1460.0))
+        bwd_len_mean = float(np.clip(rng.normal(loc=520.0, scale=180.0), 52.0, 1460.0))
         fwd_len_max = float(min(1500.0, fwd_len_mean * rng.uniform(1.3, 2.4)))
         bwd_len_max = float(min(1500.0, bwd_len_mean * rng.uniform(1.4, 2.6)))
         syn_cnt = int(rng.choice([0, 1], p=[0.25, 0.75]))
@@ -145,8 +145,8 @@ def _synthesize_cicids_flow_profile(
         duration = float(rng.lognormal(mean=11.8, sigma=0.9))
         fwd_pkts = int(max(5, rng.poisson(lam=28)))
         bwd_pkts = int(max(2, rng.poisson(lam=22)))
-        fwd_len_mean = float(rng.normal(loc=380.0, scale=60.0).clip(180.0, 900.0))
-        bwd_len_mean = float(rng.normal(loc=1150.0, scale=180.0).clip(600.0, 1460.0))
+        fwd_len_mean = float(np.clip(rng.normal(loc=380.0, scale=60.0), 180.0, 900.0))
+        bwd_len_mean = float(np.clip(rng.normal(loc=1150.0, scale=180.0), 600.0, 1460.0))
         fwd_len_max = float(min(1500.0, fwd_len_mean * rng.uniform(1.4, 2.0)))
         bwd_len_max = 1460.0
         syn_cnt = int(rng.choice([1, 2, 3], p=[0.5, 0.35, 0.15]))
@@ -185,8 +185,8 @@ def _synthesize_cicids_flow_profile(
         duration = float(rng.lognormal(mean=10.5, sigma=0.8))
         fwd_pkts = int(max(18, rng.poisson(lam=64)))
         bwd_pkts = int(max(0, rng.poisson(lam=4)))
-        fwd_len_mean = float(rng.normal(loc=890.0, scale=160.0).clip(400.0, 1460.0))
-        bwd_len_mean = float(rng.normal(loc=90.0, scale=45.0).clip(0.0, 300.0))
+        fwd_len_mean = float(np.clip(rng.normal(loc=890.0, scale=160.0), 400.0, 1460.0))
+        bwd_len_mean = float(np.clip(rng.normal(loc=90.0, scale=45.0), 0.0, 300.0))
         fwd_len_max = 1460.0
         bwd_len_max = float(max(bwd_len_mean, 180.0))
         syn_cnt = int(rng.integers(3, 12))
@@ -205,8 +205,8 @@ def _synthesize_cicids_flow_profile(
         duration = float(rng.lognormal(mean=12.6, sigma=0.6))
         fwd_pkts = int(max(8, rng.poisson(lam=24)))
         bwd_pkts = int(max(8, rng.poisson(lam=26)))
-        fwd_len_mean = float(rng.normal(loc=115.0, scale=25.0).clip(60.0, 240.0))
-        bwd_len_mean = float(rng.normal(loc=145.0, scale=30.0).clip(60.0, 300.0))
+        fwd_len_mean = float(np.clip(rng.normal(loc=115.0, scale=25.0), 60.0, 240.0))
+        bwd_len_mean = float(np.clip(rng.normal(loc=145.0, scale=30.0), 60.0, 300.0))
         fwd_len_max = float(fwd_len_mean * rng.uniform(1.8, 2.8))
         bwd_len_max = float(bwd_len_mean * rng.uniform(1.8, 2.8))
         syn_cnt = 1
@@ -214,7 +214,7 @@ def _synthesize_cicids_flow_profile(
         ack_cnt = int(fwd_pkts + bwd_pkts)
         psh_cnt = int(rng.integers(8, 20))
         init_win = 29200.0
-        active_mean = float(rng.normal(loc=42000.0, scale=9000.0).clip(5000.0, 95000.0))
+        active_mean = float(np.clip(rng.normal(loc=42000.0, scale=9000.0), 5000.0, 95000.0))
         src_ip = f"172.16.0.{rng.integers(150, 165)}"
         dst_ip = "192.168.10.19"
 
@@ -227,8 +227,8 @@ def _synthesize_cicids_flow_profile(
         duration = float(rng.lognormal(mean=14.5, sigma=0.5))
         fwd_pkts = int(max(12, rng.poisson(lam=35)))
         bwd_pkts = int(max(10, rng.poisson(lam=32)))
-        fwd_len_mean = float(rng.normal(loc=72.0, scale=14.0).clip(44.0, 130.0))
-        bwd_len_mean = float(rng.normal(loc=68.0, scale=14.0).clip(44.0, 130.0))
+        fwd_len_mean = float(np.clip(rng.normal(loc=72.0, scale=14.0), 44.0, 130.0))
+        bwd_len_mean = float(np.clip(rng.normal(loc=68.0, scale=14.0), 44.0, 130.0))
         fwd_len_max = float(fwd_len_mean * 3.8)
         bwd_len_max = float(bwd_len_mean * 3.6)
         syn_cnt = int(rng.integers(2, 6))
@@ -236,7 +236,7 @@ def _synthesize_cicids_flow_profile(
         ack_cnt = int(fwd_pkts + bwd_pkts)
         psh_cnt = int(rng.integers(12, 28))
         init_win = 128.0
-        active_mean = float(rng.normal(loc=280000.0, scale=40000.0).clip(150000.0, 450000.0))
+        active_mean = float(np.clip(rng.normal(loc=280000.0, scale=40000.0), 150000.0, 450000.0))
         src_ip = f"192.168.10.{rng.integers(101, 130)}"
         dst_ip = f"198.51.100.{rng.integers(20, 80)}"
 
@@ -246,8 +246,8 @@ def _synthesize_cicids_flow_profile(
         duration = float(rng.lognormal(mean=13.4, sigma=0.7))
         fwd_pkts = int(max(15, rng.poisson(lam=42)))
         bwd_pkts = int(max(12, rng.poisson(lam=38)))
-        fwd_len_mean = float(rng.normal(loc=980.0, scale=140.0).clip(620.0, 1460.0))
-        bwd_len_mean = float(rng.normal(loc=820.0, scale=160.0).clip(450.0, 1460.0))
+        fwd_len_mean = float(np.clip(rng.normal(loc=980.0, scale=140.0), 620.0, 1460.0))
+        bwd_len_mean = float(np.clip(rng.normal(loc=820.0, scale=160.0), 450.0, 1460.0))
         fwd_len_max = 1460.0
         bwd_len_max = 1460.0
         syn_cnt = int(rng.integers(2, 5))
@@ -255,7 +255,7 @@ def _synthesize_cicids_flow_profile(
         ack_cnt = int(fwd_pkts + bwd_pkts)
         psh_cnt = int(rng.integers(18, 36))
         init_win = 64.0
-        active_mean = float(rng.normal(loc=195000.0, scale=35000.0).clip(90000.0, 320000.0))
+        active_mean = float(np.clip(rng.normal(loc=195000.0, scale=35000.0), 90000.0, 320000.0))
         src_ip = f"198.51.100.{rng.integers(100, 180)}"
         dst_ip = "192.168.10.50"
 

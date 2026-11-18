@@ -91,7 +91,7 @@ class AegisExplainer:
         self, x_row: np.ndarray, target_class_idx: int
     ) -> tuple[np.ndarray, float]:
         """Returns (shap_values_for_class, base_value_for_class) for a single scaled feature row."""
-        row_2d = np.asarray(x_row, dtype=np.float64).reshape(1, -1)
+        row_2d = np.asarray(x_row, dtype=np.float32).reshape(1, -1)
 
         if self._shap_explainer is not None:
             try:

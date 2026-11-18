@@ -132,6 +132,11 @@ def standardize_and_validate_dataframe(
             work[m_col] = np.nan
 
     # 2. Coerce all feature columns to numeric, counting Inf and NaN
+    for col in CANONICAL_FEATURES:
+        if work[col].dtype == object:
+            s_clean = work[col].astype(str).str.strip().str.lower()
+            work.loc[s_clean.isin(["inf", "infinity", "+inf", "+infinity"]), col] = np.inf
+            work.loc[s_clean.isin(["-inf", "-infinity"]), col] = -np.inf
     feature_block = work[CANONICAL_FEATURES].apply(pd.to_numeric, errors="coerce")
     inf_mask = np.isinf(feature_block.to_numpy(dtype=np.float64, na_value=0.0))
     report.infinite_value_cells = int(inf_mask.sum())
