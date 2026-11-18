@@ -11,8 +11,11 @@ env/
 # Database & Local Artifacts
 *.db
 *.sqlite3
+*.joblib
 backend/data/*.db
+backend/app/data/*.db
 backend/artifacts/*.joblib
+backend/app/artifacts/*.joblib
 backend/uploads/
 
 # Node / Frontend
