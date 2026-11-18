@@ -1,10 +1,10 @@
 services:
-  # 1. FastAPI + ML Backend Service
+  # Single Unified Full-Stack Service (FastAPI Backend + Compiled React Frontend)
   - type: web
-    name: aegisnet-backend
+    name: aegisnet
     runtime: python
     rootDir: backend
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/v1/health
@@ -21,19 +21,3 @@ services:
         sync: false
       - key: FIREWORKS_MODEL
         value: accounts/fireworks/models/llama-v3p3-70b-instruct
-
-  # 2. React + TypeScript Cybersecurity Dashboard (Static Site)
-  - type: web
-    name: aegisnet-frontend
-    runtime: static
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_BASE_URL
-        # Replace with your deployed backend URL + /api/v1 if configuring manually
-        value: https://aegisnet-backend.onrender.com/api/v1
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html

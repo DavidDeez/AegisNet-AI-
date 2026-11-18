@@ -7,6 +7,8 @@ import time
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router as api_router
 from app.core.config import settings
@@ -123,6 +125,38 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router)
+
+    # Serve compiled React frontend from single unified service when present
+    backend_root = Path(__file__).resolve().parent.parent
+    repo_root = backend_root.parent
+    static_candidates = [
+        backend_root / "static_ui",
+        repo_root / "frontend" / "dist",
+    ]
+    for static_dir in static_candidates:
+        index_html = static_dir / "index.html"
+        if index_html.exists():
+            assets_dir = static_dir / "assets"
+            if assets_dir.exists():
+                app.mount(
+                    "/assets",
+                    StaticFiles(directory=str(assets_dir)),
+                    name="assets",
+                )
+
+            @app.get("/{full_path:path}", include_in_schema=False)
+            def serve_spa(full_path: str, _static_dir: Path = static_dir):
+                candidate = (_static_dir / full_path).resolve()
+                if (
+                    full_path
+                    and candidate.is_file()
+                    and str(candidate).startswith(str(_static_dir.resolve()))
+                ):
+                    return FileResponse(str(candidate))
+                return FileResponse(str(_static_dir / "index.html"))
+
+            break
+
     return app
 
 
