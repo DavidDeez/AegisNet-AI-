@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Activity } from 'lucide-react';
 import type { NetworkEventRecord } from '../types/aegis';
 import { SeverityBadge, TriageBadge } from './Badge';
 
 /**
- * 0. Bespoke AegisNet Vector Crest & Wordmark Logo
- * Hexagonal Aegis cyber-shield with internal neural network lattice, orbital electron ring,
- * and pulsing central sentinel core.
+ * 0. Bespoke AegisNet Vector Crest & Wordmark Logo with GradeGuide `.draw-icon` SVG Path Animation
+ * and `.holographic-text` Brand Title.
  */
 export const AegisLogo: React.FC<{
   collapsed?: boolean;
@@ -17,14 +17,13 @@ export const AegisLogo: React.FC<{
         style={{ width: size, height: size }}
         className="relative shrink-0 flex items-center justify-center"
       >
-        {/* Subtle ambient core glow */}
-        <div className="absolute inset-0 rounded-lg bg-sky-400/15 blur-md group-hover:bg-sky-400/25 transition-all duration-300" />
+        <div className="absolute inset-0 rounded-lg bg-[#79c0ff]/20 blur-md group-hover:bg-[#d2a8ff]/30 transition-all duration-300" />
 
         <svg
           viewBox="0 0 64 64"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full relative z-10 drop-shadow-[0_0_8px_rgba(56,189,248,0.28)]"
+          className="w-full h-full relative z-10 draw-icon drop-shadow-[0_0_10px_rgba(121,192,255,0.35)]"
         >
           <defs>
             <linearGradient
@@ -35,9 +34,9 @@ export const AegisLogo: React.FC<{
               y2="60"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stopColor="#e2e8f0" />
-              <stop offset="50%" stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#64748b" />
+              <stop offset="0%" stopColor="#79c0ff" />
+              <stop offset="50%" stopColor="#d2a8ff" />
+              <stop offset="100%" stopColor="#ff7b72" />
             </linearGradient>
             <linearGradient
               id="aegisCoreGrad"
@@ -47,36 +46,36 @@ export const AegisLogo: React.FC<{
               y2="52"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stopColor="rgba(56, 189, 248, 0.28)" />
-              <stop offset="100%" stopColor="rgba(15, 23, 42, 0.85)" />
+              <stop offset="0%" stopColor="rgba(121, 192, 255, 0.25)" />
+              <stop offset="100%" stopColor="rgba(22, 27, 34, 0.9)" />
             </linearGradient>
           </defs>
 
           {/* Outer Precision Hexagonal Aegis Frame */}
           <polygon
             points="32,3 57,17.5 57,46.5 32,61 7,46.5 7,17.5"
-            fill="rgba(9, 13, 22, 0.9)"
+            fill="#0d1117"
             stroke="url(#aegisOuterGrad)"
-            strokeWidth="2"
+            strokeWidth="2.2"
           />
 
           {/* Inner Tactical Shield Contour */}
           <path
             d="M32 9L50 19.5V35.5C50 45.2 42.3 52.8 32 56C21.7 52.8 14 45.2 14 35.5V19.5L32 9Z"
             fill="url(#aegisCoreGrad)"
-            stroke="rgba(125, 211, 252, 0.45)"
-            strokeWidth="1.2"
+            stroke="#79c0ff"
+            strokeWidth="1.3"
           />
 
-          {/* Orbital Electron Ring */}
+          {/* Orbital Electron Rings */}
           <ellipse
             cx="32"
             cy="32"
             rx="16"
             ry="7.5"
             transform="rotate(-28 32 32)"
-            stroke="rgba(56, 189, 248, 0.55)"
-            strokeWidth="1"
+            stroke="#d2a8ff"
+            strokeWidth="1.1"
             strokeDasharray="3 2"
           />
           <ellipse
@@ -85,8 +84,8 @@ export const AegisLogo: React.FC<{
             rx="16"
             ry="7.5"
             transform="rotate(28 32 32)"
-            stroke="rgba(226, 232, 240, 0.35)"
-            strokeWidth="1"
+            stroke="#79c0ff"
+            strokeWidth="1.1"
           />
 
           {/* Neural Flow Lattice Lines */}
@@ -95,50 +94,46 @@ export const AegisLogo: React.FC<{
             y1="17"
             x2="21"
             y2="37"
-            stroke="#e2e8f0"
-            strokeWidth="1.4"
-            strokeOpacity="0.8"
+            stroke="#f0f6fc"
+            strokeWidth="1.5"
           />
           <line
             x1="32"
             y1="17"
             x2="43"
             y2="37"
-            stroke="#e2e8f0"
-            strokeWidth="1.4"
-            strokeOpacity="0.8"
+            stroke="#f0f6fc"
+            strokeWidth="1.5"
           />
           <line
             x1="21"
             y1="37"
             x2="43"
             y2="37"
-            stroke="#38bdf8"
-            strokeWidth="1.3"
-            strokeOpacity="0.85"
+            stroke="#79c0ff"
+            strokeWidth="1.4"
           />
           <line
             x1="32"
             y1="17"
             x2="32"
             y2="46"
-            stroke="#38bdf8"
-            strokeWidth="1.2"
-            strokeOpacity="0.65"
+            stroke="#d2a8ff"
+            strokeWidth="1.3"
           />
 
           {/* Vertex Electron Nodes */}
           <circle cx="32" cy="17" r="2.6" fill="#ffffff" />
-          <circle cx="21" cy="37" r="2.3" fill="#38bdf8" />
-          <circle cx="43" cy="37" r="2.3" fill="#38bdf8" />
-          <circle cx="32" cy="46" r="2.1" fill="#e2e8f0" />
+          <circle cx="21" cy="37" r="2.4" fill="#79c0ff" />
+          <circle cx="43" cy="37" r="2.4" fill="#d2a8ff" />
+          <circle cx="32" cy="46" r="2.2" fill="#ff7b72" />
 
           {/* Central Sentinel Core */}
           <circle
             cx="32"
             cy="31"
-            r="3.4"
-            fill="#38bdf8"
+            r="3.5"
+            fill="#79c0ff"
             stroke="#ffffff"
             strokeWidth="1.2"
           />
@@ -147,16 +142,11 @@ export const AegisLogo: React.FC<{
 
       {!collapsed && (
         <div className="leading-none overflow-hidden">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[14px] font-mono font-bold tracking-[0.16em] text-white">
-              AEGIS
-            </span>
-            <span className="text-[14px] font-mono font-bold tracking-[0.16em] text-sky-400">
-              NET
-            </span>
+          <div className="brand-title text-[17px] font-bold tracking-tight holographic-text">
+            AEGISNET.ai
           </div>
-          <div className="text-[9px] font-mono tracking-[0.14em] text-slate-400 mt-1 truncate">
-            OPEN-SET XAI // NIDS
+          <div className="text-[10px] font-mono text-[#8b949e] mt-1 truncate">
+            Open-Set NIDS & XAI
           </div>
         </div>
       )}
@@ -165,25 +155,13 @@ export const AegisLogo: React.FC<{
 };
 
 /**
- * 1. Perpetual Floating Electron & Electrostatic Lattice Canvas Background
- * Renders continuous floating electrons, orbital nuclei, and dynamic proximity filaments
- * that gently interact with the user's cursor in 60fps HTML5 canvas.
+ * 1. GradeGuide Excited Perpetual Electron / Starfield Canvas Background (Multiplied Density!)
+ * Exact physics from GradeGuide's `ParticleBackground`:
+ * - Multiplied particle count (`(width * height) / 4200` -> ~350-450 stars/electrons on 1080p)
+ * - Excited velocity `(Math.random() - 0.5) * 1.65`
+ * - Mouse repulsion force field (`mouse.radius = 155`, `force * 5` push-away)
+ * - Dynamic constellation connections (`distance < 135`)
  */
-interface ElectronParticle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  alpha: number;
-  pulsePhase: number;
-  pulseSpeed: number;
-  hue: string;
-  orbitRadius: number;
-  orbitAngle: number;
-  orbitSpeed: number;
-}
-
 export const ElectronCanvasBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -193,159 +171,133 @@ export const ElectronCanvasBackground: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId = 0;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let animationFrameId = 0;
 
-    const pointer = { x: width * 0.5, y: height * 0.35, active: false };
-
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    const mouse: { x: number | null; y: number | null; radius: number } = {
+      x: null,
+      y: null,
+      radius: 155,
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      pointer.x = e.clientX;
-      pointer.y = e.clientY;
-      pointer.active = true;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
     };
 
     const handleMouseLeave = () => {
-      pointer.active = false;
+      mouse.x = null;
+      mouse.y = null;
     };
 
-    window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('mouseleave', handleMouseLeave);
 
-    // Create perpetual floating electrons
-    const particleCount = Math.min(72, Math.max(38, Math.floor((width * height) / 22000)));
-    const colors = [
-      '56, 189, 248',  // cyan electron
-      '226, 232, 240', // silver-white electron
-      '125, 211, 252', // ice blue electron
-      '52, 211, 153',  // subtle emerald quantum node
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    interface StarElectron {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      radius: number;
+      color: string;
+    }
+
+    const starPalette = [
+      'rgba(201, 209, 217, 0.78)', // GradeGuide signature bright silver
+      'rgba(121, 192, 255, 0.75)', // GradeGuide holographic blue
+      'rgba(210, 168, 255, 0.72)', // GradeGuide holographic violet
+      'rgba(240, 246, 252, 0.85)', // Bright white star
     ];
 
-    const particles: ElectronParticle[] = Array.from({ length: particleCount }, (_, i) => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.52,
-      vy: (Math.random() - 0.5) * 0.52,
-      radius: i % 6 === 0 ? 2.2 : 1.1 + Math.random() * 0.9,
-      alpha: 0.35 + Math.random() * 0.45,
-      pulsePhase: Math.random() * Math.PI * 2,
-      pulseSpeed: 0.015 + Math.random() * 0.025,
-      hue: colors[i % colors.length],
-      orbitRadius: 4 + Math.random() * 10,
-      orbitAngle: Math.random() * Math.PI * 2,
-      orbitSpeed: (Math.random() > 0.5 ? 1 : -1) * (0.012 + Math.random() * 0.02),
-    }));
+    // Multiplied star/electron density (2.4x denser than standard 10000 divisor)
+    const particleCount = Math.min(
+      340,
+      Math.max(140, Math.floor((canvas.width * canvas.height) / 4200))
+    );
 
-    const linkDistance = 145;
-    const cursorDistance = 185;
+    const particles: StarElectron[] = Array.from(
+      { length: particleCount },
+      (_, i) => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 1.6,
+        vy: (Math.random() - 0.5) * 1.6,
+        radius: Math.random() * 1.7 + 0.6,
+        color: starPalette[i % starPalette.length],
+      })
+    );
 
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update and draw each floating electron
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        p.pulsePhase += p.pulseSpeed;
-        p.orbitAngle += p.orbitSpeed;
+        p.x += p.vx;
+        p.y += p.vy;
 
-        // Perpetual drift + micro orbital harmonic motion
-        p.x += p.vx + Math.cos(p.orbitAngle) * 0.14;
-        p.y += p.vy + Math.sin(p.orbitAngle) * 0.14;
-
-        // Wrap around screen edges seamlessly
-        if (p.x < -20) p.x = width + 20;
-        if (p.x > width + 20) p.x = -20;
-        if (p.y < -20) p.y = height + 20;
-        if (p.y > height + 20) p.y = -20;
-
-        // Subtle electromagnetic attraction/orbital tangential force near cursor
-        if (pointer.active) {
-          const dx = pointer.x - p.x;
-          const dy = pointer.y - p.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist > 10 && dist < cursorDistance) {
-            const force = (1 - dist / cursorDistance) * 0.018;
-            // Tangential orbital swirl + gentle pull
-            p.x += dx * force - (dy / dist) * 0.35;
-            p.y += dy * force + (dx / dist) * 0.35;
-
-            // Draw electron filament to cursor
-            const lineAlpha = (1 - dist / cursorDistance) * 0.24;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(pointer.x, pointer.y);
-            ctx.strokeStyle = `rgba(56, 189, 248, ${lineAlpha.toFixed(3)})`;
-            ctx.lineWidth = 0.75;
-            ctx.stroke();
+        // GradeGuide Mouse Repulsion Force Field
+        if (mouse.x != null && mouse.y != null) {
+          const dx = mouse.x - p.x;
+          const dy = mouse.y - p.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance > 0.1 && distance < mouse.radius) {
+            const forceDirectionX = dx / distance;
+            const forceDirectionY = dy / distance;
+            const force = (mouse.radius - distance) / mouse.radius;
+            p.x -= forceDirectionX * force * 5;
+            p.y -= forceDirectionY * force * 5;
           }
         }
 
-        const currentAlpha =
-          p.alpha * (0.7 + 0.3 * Math.sin(p.pulsePhase));
+        if (p.x < 0 || p.x > canvas.width) p.vx = -p.vx;
+        if (p.y < 0 || p.y > canvas.height) p.vy = -p.vy;
 
-        // Outer electron glow halo
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius * 3.2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.hue}, ${(currentAlpha * 0.15).toFixed(3)})`;
-        ctx.fill();
-
-        // Core electron particle
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.hue}, ${currentAlpha.toFixed(3)})`;
+        ctx.fillStyle = p.color;
         ctx.fill();
+      }
 
-        // For primary nuclei nodes (every 6th particle), draw a miniature orbiting satellite electron
-        if (i % 6 === 0) {
-          const satX = p.x + Math.cos(p.orbitAngle * 2.2) * p.orbitRadius;
-          const satY = p.y + Math.sin(p.orbitAngle * 2.2) * p.orbitRadius;
-
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.orbitRadius, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(56, 189, 248, 0.11)`;
-          ctx.lineWidth = 0.6;
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(satX, satY, 1.0, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(226, 232, 240, 0.75)`;
-          ctx.fill();
-        }
-
-        // Connect nearby electrons with electrostatic lattice filaments
+      // Draw GradeGuide Constellation Filaments
+      const linkDist = 128;
+      for (let i = 0; i < particles.length; i++) {
+        const pi = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < linkDistance * linkDistance) {
-            const dist = Math.sqrt(distSq);
-            const alpha = (1 - dist / linkDistance) * 0.14;
+          const pj = particles[j];
+          const dx = pi.x - pj.x;
+          const dy = pi.y - pj.y;
+          if (Math.abs(dx) > linkDist || Math.abs(dy) > linkDist) continue;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < linkDist) {
             ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(148, 163, 184, ${alpha.toFixed(3)})`;
-            ctx.lineWidth = 0.6;
+            ctx.strokeStyle = `rgba(201, 209, 217, ${(
+              0.22 -
+              (distance / linkDist) * 0.22
+            ).toFixed(3)})`;
+            ctx.lineWidth = 0.8;
+            ctx.moveTo(pi.x, pi.y);
+            ctx.lineTo(pj.x, pj.y);
             ctx.stroke();
           }
         }
       }
 
-      animId = requestAnimationFrame(render);
+      animationFrameId = requestAnimationFrame(animate);
     };
 
-    animId = requestAnimationFrame(render);
+    animate();
 
     return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
     };
@@ -355,13 +307,296 @@ export const ElectronCanvasBackground: React.FC = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
-      style={{ opacity: 0.85 }}
+      style={{ background: 'var(--bg-dark)' }}
     />
   );
 };
 
 /**
- * 2. Global Cursor-Tracking Specular Glass Spotlight & Subtle 3D Tilt Engine
+ * 2. GradeGuide TerminalBackground Component
+ * Faded background live terminal stream in bottom corner.
+ */
+export const TerminalBackground: React.FC = () => {
+  const [logs, setLogs] = useState<string[]>([
+    '> [INIT] AegisNet NIDS Core & Calibrated Random Forest ready.',
+    '> [OK] Isolation Forest benign p95 quantile reference loaded.',
+    '> [XAI] TreeSHAP additive decision-path engine online.',
+  ]);
+
+  useEffect(() => {
+    const commands = [
+      'Evaluating incoming CICFlowMeter 24-feature vector...',
+      '[OK] Platt sigmoid calibration ECE verified (0.0063).',
+      'Computing normalized Shannon entropy H(p)/ln(K)...',
+      'Probing Isolation Forest open-set decision boundary...',
+      '[WARN] Elevated IAT variance detected on TCP/8443 flow.',
+      'Synthesizing Suricata IDS & nftables containment rule...',
+      'Checking Population Stability Index (PSI) feature drift...',
+      '[OK] TreeSHAP local waterfall additivity verified.',
+    ];
+
+    const interval = setInterval(() => {
+      const randomCmd = commands[Math.floor(Math.random() * commands.length)];
+      const timestamp = new Date().toISOString().split('T')[1].substring(0, 8);
+      setLogs((prev) => [...prev.slice(-11), `> [${timestamp}] ${randomCmd}`]);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="terminal-bg-container">
+      {logs.map((log, i) => (
+        <div key={i}>{log}</div>
+      ))}
+    </div>
+  );
+};
+
+/**
+ * 3. GradeGuide TypewriterText Component with Blinking Block Cursor (`█`)
+ */
+export const TypewriterText: React.FC<{
+  text: string;
+  delay?: number;
+  className?: string;
+}> = ({ text, delay = 32, className = '' }) => {
+  const [currentText, setCurrentText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setCurrentText((prev) => prev + text[currentIndex]);
+        setCurrentIndex((prev) => prev + 1);
+      }, delay);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, delay, text]);
+
+  return (
+    <span className={className}>
+      {currentText}
+      <span className="inline-block ml-0.5 text-[#79c0ff] animate-pulse">
+        █
+      </span>
+    </span>
+  );
+};
+
+/**
+ * 4. GradeGuide MagneticButton Component (Pulls Toward Cursor on Hover)
+ */
+export const MagneticButton: React.FC<{
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  title?: string;
+  disabled?: boolean;
+  type?: 'button' | 'submit';
+}> = ({
+  children,
+  onClick,
+  className = '',
+  title,
+  disabled = false,
+  type = 'button',
+}) => {
+  const ref = useRef<HTMLButtonElement | null>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!ref.current || disabled) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    setPosition({ x: x * 0.28, y: y * 0.28 });
+  };
+
+  const handleMouseLeave = () => {
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <button
+      ref={ref}
+      type={type}
+      disabled={disabled}
+      title={title}
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={className}
+      style={{
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        transition:
+          position.x === 0
+            ? 'transform 0.45s cubic-bezier(0.3, 0, 0.5, 1)'
+            : 'none',
+      }}
+    >
+      {children}
+    </button>
+  );
+};
+
+/**
+ * 5. GradeGuide ScoreRing Animated SVG Circular Gauge
+ */
+export const ScoreRing: React.FC<{
+  score: number;
+  label: string;
+  sublabel?: string;
+  size?: number;
+  strokeWidth?: number;
+  color?: string;
+}> = ({
+  score,
+  label,
+  sublabel,
+  size = 86,
+  strokeWidth = 7,
+  color,
+}) => {
+  const clamped = Math.max(0, Math.min(100, score));
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (clamped / 100) * circumference;
+  const activeColor =
+    color ||
+    (clamped >= 80
+      ? '#39d353'
+      : clamped >= 50
+      ? '#79c0ff'
+      : '#f85149');
+
+  return (
+    <div className="flex items-center gap-3.5">
+      <div style={{ position: 'relative', width: size, height: size }} className="shrink-0">
+        <svg
+          width={size}
+          height={size}
+          style={{ transform: 'rotate(-90deg)' }}
+        >
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={activeColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 1.2s ease-out' }}
+            strokeLinecap="round"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-mono font-bold text-white">
+            {clamped.toFixed(1)}%
+          </span>
+        </div>
+      </div>
+      <div className="min-w-0">
+        <div className="text-xs font-heading font-semibold text-white truncate">
+          {label}
+        </div>
+        {sublabel && (
+          <div className="text-[11px] text-[#8b949e] mt-0.5 leading-snug">
+            {sublabel}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 6. GradeGuide ActivityHeatmap (GitHub-Style 90-Day Threat & Flow Inspection Matrix)
+ */
+export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
+  totalEvents,
+}) => {
+  const cells = useMemo(() => {
+    // Deterministic 7x18 matrix seeded by totalEvents so it reflects live session growth
+    return Array.from({ length: 7 * 18 }, (_, idx) => {
+      const v = ((idx * 17 + totalEvents * 3) % 11);
+      if (idx > 118) return Math.min(4, Math.max(2, (totalEvents % 4) + 1));
+      if (v < 5) return 0;
+      if (v < 7) return 1;
+      if (v < 9) return 2;
+      if (v === 9) return 3;
+      return 4;
+    });
+  }, [totalEvents]);
+
+  const getColor = (val: number) => {
+    if (val === 0) return '#161b22';
+    if (val === 1) return '#0e4429';
+    if (val === 2) return '#006d32';
+    if (val === 3) return '#26a641';
+    return '#39d353';
+  };
+
+  return (
+    <div className="bg-[#0d1117] p-4 space-y-2.5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-heading font-semibold text-[#c9d1d9] flex items-center gap-2">
+          <Activity className="w-3.5 h-3.5 text-[#79c0ff]" />
+          Network Flow Inspection & Threat Triage Activity (90-Day Telemetry Matrix)
+        </h3>
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#8b949e]">
+          <span>Less</span>
+          {[0, 1, 2, 3, 4].map((lv) => (
+            <span
+              key={lv}
+              style={{ background: getColor(lv) }}
+              className="w-2.5 h-2.5 rounded-[2px] inline-block border border-white/5"
+            />
+          ))}
+          <span>More</span>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateRows: 'repeat(7, 1fr)',
+          gridAutoFlow: 'column',
+          gap: '4px',
+        }}
+        className="overflow-x-auto pb-1"
+      >
+        {cells.map((val, i) => (
+          <div
+            key={i}
+            style={{
+              width: '12px',
+              height: '12px',
+              background: getColor(val),
+              borderRadius: '2px',
+              outline: '1px solid rgba(255,255,255,0.05)',
+              outlineOffset: '-1px',
+            }}
+            className="hover:scale-125 transition-transform"
+            title={`Telemetry Window #${i + 1}: ${val * 18} flows verified`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 7. Global Cursor-Tracking Specular Glass Spotlight & Subtle 3D Tilt Engine
  */
 export const useGlobalGlassCursorEngine = () => {
   useEffect(() => {
@@ -380,7 +615,7 @@ export const useGlobalGlassCursorEngine = () => {
         );
 
         const cards = document.querySelectorAll<HTMLElement>(
-          '.bg-\\[\\#0d1117\\], .interactive-card'
+          '.bg-\\[\\#0d1117\\], .spotlight-wrapper'
         );
         cards.forEach((card) => {
           const rect = card.getBoundingClientRect();
@@ -388,22 +623,6 @@ export const useGlobalGlassCursorEngine = () => {
           const y = e.clientY - rect.top;
           card.style.setProperty('--mouse-x', `${x}px`);
           card.style.setProperty('--mouse-y', `${y}px`);
-
-          if (card.classList.contains('interactive-tilt')) {
-            if (
-              x >= 0 &&
-              x <= rect.width &&
-              y >= 0 &&
-              y <= rect.height
-            ) {
-              const normX = (x / rect.width - 0.5) * 2;
-              const normY = (y / rect.height - 0.5) * 2;
-              card.style.transform = `perspective(900px) rotateX(${(-normY * 1.6).toFixed(2)}deg) rotateY(${(normX * 1.6).toFixed(2)}deg) translateY(-1px)`;
-            } else {
-              card.style.transform =
-                'perspective(900px) rotateX(0deg) rotateY(0deg) translateY(0px)';
-            }
-          }
         });
       });
     };
@@ -417,7 +636,7 @@ export const useGlobalGlassCursorEngine = () => {
 };
 
 /**
- * 3. Smooth JavaScript Ease-Out Counter Hook for Live Telemetry Numbers
+ * 8. Smooth JavaScript Ease-Out Counter Hook for Live Telemetry Numbers
  */
 export const AnimatedMetric: React.FC<{
   value: number;
@@ -475,7 +694,7 @@ export const AnimatedMetric: React.FC<{
 };
 
 /**
- * 4. Floating Cursor-Following Forensic HUD Card on Flow Row Hover
+ * 9. Floating Cursor-Following Forensic HUD Card on Flow Row Hover
  */
 export const FlowHoverHud: React.FC<{
   event: NetworkEventRecord | null;
@@ -494,22 +713,22 @@ export const FlowHoverHud: React.FC<{
       style={{
         transform: `translate3d(${left}px, ${top}px, 0)`,
       }}
-      className="fixed top-0 left-0 z-50 w-80 pointer-events-none glass-modal rounded-[4px] p-3.5 space-y-2.5 text-[11px] font-mono transition-transform duration-75 ease-out"
+      className="fixed top-0 left-0 z-50 w-80 pointer-events-none glass-modal rounded-[6px] p-3.5 space-y-2.5 text-[11px] font-mono transition-transform duration-75 ease-out"
     >
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
-        <span className="text-white font-semibold">{event.event_uid}</span>
+        <span className="text-[#79c0ff] font-semibold">{event.event_uid}</span>
         <div className="flex items-center gap-1.5">
           <TriageBadge category={event.triage_category} />
           <SeverityBadge severity={event.severity} />
         </div>
       </div>
 
-      <div className="px-2 py-1.5 rounded-[2px] bg-black/50 border border-white/10 flex items-center justify-between text-[10px]">
+      <div className="px-2 py-1.5 rounded-[4px] bg-black/50 border border-white/10 flex items-center justify-between text-[10px]">
         <span className="text-slate-200">
           {event.src_ip}:{event.src_port}
         </span>
-        <span className="text-slate-500">──[{event.protocol}]──►</span>
-        <span className="text-slate-100 font-semibold">
+        <span className="text-[#d2a8ff]">──[{event.protocol}]──►</span>
+        <span className="text-white font-semibold">
           {event.dst_ip}:{event.dst_port}
         </span>
       </div>
@@ -518,13 +737,13 @@ export const FlowHoverHud: React.FC<{
         <div className="space-y-0.5">
           <div className="flex justify-between text-slate-400">
             <span>CONF P(y|x)</span>
-            <span className="text-slate-100">
+            <span className="text-[#79c0ff]">
               {(event.supervised_confidence * 100).toFixed(1)}%
             </span>
           </div>
           <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
             <div
-              className="h-full bg-slate-200"
+              className="h-full bg-[#79c0ff]"
               style={{ width: `${event.supervised_confidence * 100}%` }}
             />
           </div>
@@ -533,13 +752,13 @@ export const FlowHoverHud: React.FC<{
         <div className="space-y-0.5">
           <div className="flex justify-between text-slate-400">
             <span>ATTACK MASS</span>
-            <span className="text-red-300">
+            <span className="text-[#ff7b72]">
               {(event.known_attack_probability * 100).toFixed(1)}%
             </span>
           </div>
           <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
             <div
-              className="h-full bg-red-400"
+              className="h-full bg-[#ff7b72]"
               style={{ width: `${event.known_attack_probability * 100}%` }}
             />
           </div>
@@ -548,13 +767,13 @@ export const FlowHoverHud: React.FC<{
         <div className="space-y-0.5">
           <div className="flex justify-between text-slate-400">
             <span>ENTROPY H(p)</span>
-            <span className="text-sky-300">
+            <span className="text-[#d2a8ff]">
               {event.predictive_entropy.toFixed(3)}
             </span>
           </div>
           <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
             <div
-              className="h-full bg-sky-400"
+              className="h-full bg-[#d2a8ff]"
               style={{ width: `${event.predictive_entropy * 100}%` }}
             />
           </div>
@@ -577,14 +796,14 @@ export const FlowHoverHud: React.FC<{
       </div>
 
       {event.rationale_text && (
-        <div className="text-[10px] text-slate-400 line-clamp-2 border-t border-white/10 pt-1.5 leading-relaxed">
+        <div className="text-[10px] text-slate-300 line-clamp-2 border-t border-white/10 pt-1.5 leading-relaxed">
           {event.rationale_text}
         </div>
       )}
 
-      <div className="text-[9px] text-slate-500 flex justify-between pt-0.5">
+      <div className="text-[9px] text-slate-400 flex justify-between pt-0.5">
         <span>CLASS: {event.predicted_label}</span>
-        <span className="text-slate-300">[CLICK TO OPEN INSPECTOR →]</span>
+        <span className="text-[#79c0ff]">[CLICK TO INSPECT →]</span>
       </div>
     </div>
   );

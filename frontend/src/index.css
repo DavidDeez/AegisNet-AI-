@@ -3,70 +3,170 @@
 @tailwind utilities;
 
 :root {
+  --bg-dark: #0d1117;
+  --bg-main: #0d1117;
+  --panel-bg: rgba(22, 27, 34, 0.78);
+  --panel-border: #30363d;
+  --primary: #f0f6fc;
+  --primary-hover: #c9d1d9;
+  --text-main: #c9d1d9;
+  --text-muted: #8b949e;
+  --danger: #f85149;
+  --success: #2ea043;
+  --warning: #d29922;
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', Courier, monospace;
   --cursor-x: 50vw;
   --cursor-y: 50vh;
 }
 
 @layer base {
   body {
-    background-color: #07080c;
-    background-image:
-      radial-gradient(
-        650px circle at var(--cursor-x) var(--cursor-y),
-        rgba(255, 255, 255, 0.028),
-        transparent 60%
-      ),
-      radial-gradient(at 50% 0%, rgba(255, 255, 255, 0.035) 0px, transparent 55%),
-      linear-gradient(to right, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
-    background-attachment: fixed;
-    color: #e2e8f0;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'tnum';
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-family);
+    line-height: 1.5;
     font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .brand-title {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
   }
 }
 
-/* Smoked Obsidian Glassmorphic Console System + JavaScript Cursor Spotlight */
-.bg-\[\#0d1117\] {
+/* GradeGuide Blueprint Grid Overlay */
+.blueprint-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+}
+
+/* GradeGuide Terminal Background Container */
+.terminal-bg-container {
+  position: fixed;
+  bottom: 28px;
+  right: 16px;
+  width: 420px;
+  height: 28vh;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.22;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 45%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 45%);
+}
+
+/* GradeGuide Holographic Animated Gradient Text */
+@keyframes holographic {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.holographic-text {
+  background: linear-gradient(90deg, #79c0ff, #d2a8ff, #ff7b72, #79c0ff);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: holographic 6s ease infinite;
+}
+
+/* GradeGuide SVG Path Draw Animation */
+.draw-icon {
+  animation: drawIcon 2.4s ease forwards;
+}
+.draw-icon path,
+.draw-icon line,
+.draw-icon polyline,
+.draw-icon polygon,
+.draw-icon circle,
+.draw-icon ellipse {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: drawPath 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes drawPath {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes drawIcon {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* GradeGuide Spotlight Card & Glass Panel System */
+.bg-\[\#0d1117\],
+.spotlight-wrapper {
   position: relative;
   background:
     radial-gradient(
-      480px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
-      rgba(255, 255, 255, 0.055),
-      transparent 45%
+      400px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+      rgba(210, 168, 255, 0.13),
+      transparent 40%
     ),
-    linear-gradient(
-      180deg,
-      rgba(16, 19, 26, 0.86) 0%,
-      rgba(11, 13, 19, 0.8) 100%
-    ) !important;
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.09),
-    0 8px 24px -6px rgba(0, 0, 0, 0.65);
+    var(--panel-bg) !important;
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid var(--panel-border) !important;
+  border-radius: 6px;
   transition:
-    border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    border-color 0.28s ease,
+    transform 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
-.bg-\[\#0d1117\]:hover {
-  border-color: rgba(255, 255, 255, 0.17) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
-    0 14px 32px -6px rgba(0, 0, 0, 0.78);
+main .bg-\[\#0d1117\]:hover,
+.spotlight-wrapper:hover {
+  border-color: rgba(121, 192, 255, 0.5) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 0 22px rgba(121, 192, 255, 0.14);
 }
 
 .interactive-ledger-cell {
   position: relative;
-  transition: background-color 0.18s ease, transform 0.18s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .interactive-ledger-cell:hover {
-  background-color: rgba(255, 255, 255, 0.035);
+  background-color: rgba(121, 192, 255, 0.06);
 }
 
 .interactive-ledger-cell::after {
@@ -76,7 +176,7 @@
   left: 0;
   width: 0%;
   height: 2px;
-  background: rgba(226, 232, 240, 0.7);
+  background: linear-gradient(90deg, #79c0ff, #d2a8ff);
   transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -90,42 +190,37 @@
 .bg-\[\#161b22\]\/70,
 .bg-\[\#161b22\]\/80,
 .bg-\[\#161b22\]\/90 {
-  background: rgba(22, 26, 35, 0.62) !important;
+  background: rgba(33, 38, 45, 0.72) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-color: rgba(255, 255, 255, 0.065) !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  border-color: var(--panel-border) !important;
 }
 
 .bg-\[\#090c10\] {
-  background-color: rgba(8, 10, 15, 0.82) !important;
+  background-color: rgba(13, 17, 23, 0.85) !important;
 }
 
 .glass-modal {
-  background: linear-gradient(
-    180deg,
-    rgba(18, 22, 30, 0.95) 0%,
-    rgba(11, 14, 20, 0.97) 100%
-  );
+  background: rgba(22, 27, 34, 0.96);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(121, 192, 255, 0.45);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    0 0 28px rgba(121, 192, 255, 0.18),
     0 24px 60px -12px rgba(0, 0, 0, 0.92);
 }
 
-/* Interactive Table Row Sweep & Left Accent Bar on Hover */
+/* Interactive Table Row Sweep */
 tbody tr {
   position: relative;
-  transition: background-color 0.14s ease, transform 0.14s ease;
+  transition: background-color 0.15s ease;
 }
 
 tbody tr:hover {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.065) 0%,
-    rgba(255, 255, 255, 0.02) 100%
+    rgba(121, 192, 255, 0.1) 0%,
+    rgba(210, 168, 255, 0.04) 100%
   ) !important;
 }
 
@@ -134,19 +229,19 @@ table {
 }
 
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(8, 10, 15, 0.8);
+  background: #0d1117;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.18);
-  border-radius: 2px;
+  background: #30363d;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.32);
+  background: #8b949e;
 }

@@ -30,6 +30,9 @@ import { TriageBadge } from './components/Badge';
 import {
   AegisLogo,
   ElectronCanvasBackground,
+  MagneticButton,
+  TerminalBackground,
+  TypewriterText,
   useGlobalGlassCursorEngine,
 } from './components/InteractiveEffects';
 
@@ -214,9 +217,11 @@ export const App: React.FC = () => {
   });
 
   return (
-    <div className="h-screen w-screen overflow-hidden text-slate-200 flex flex-col relative">
-      {/* Perpetual Floating Electron & Electrostatic Lattice Canvas Background */}
+    <div className="h-screen w-screen overflow-hidden text-[#c9d1d9] flex flex-col relative">
+      {/* GradeGuide Multiplied Excited Star/Electron Canvas + Blueprint Grid + Faded Live Terminal Background */}
       <ElectronCanvasBackground />
+      <div className="blueprint-grid" />
+      <TerminalBackground />
 
       {/* Main Locked Console Area (Sidebar + Right Viewport; neither sidebar nor top bar scrolls away) */}
       <div className="flex-1 flex min-h-0 overflow-hidden relative z-10">
@@ -392,71 +397,75 @@ export const App: React.FC = () => {
                 )}
               </button>
 
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-slate-500 hidden sm:inline">
-                  CONSOLE //
-                </span>
-                <h1 className="text-xs font-semibold text-white uppercase tracking-wider">
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-sm font-heading font-bold holographic-text uppercase tracking-wide">
                   {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
                 </h1>
+                <span className="text-[11px] font-mono text-[#8b949e] hidden xl:inline">
+                  //{' '}
+                  <TypewriterText
+                    text="Calibrated RF + Isolation Forest Open-Set Triage + TreeSHAP"
+                    delay={28}
+                  />
+                </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Command Palette Trigger */}
-              <button
+              <MagneticButton
                 onClick={() => setCmdOpen(true)}
-                className="px-2.5 py-1.5 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white hover:border-white/25 inline-flex items-center gap-2 transition"
+                className="px-2.5 py-1.5 rounded-[6px] bg-[#21262d] border border-[#30363d] text-[11px] font-mono text-[#c9d1d9] hover:text-white hover:border-[#79c0ff] inline-flex items-center gap-2 transition"
                 title="Open Command Palette (Ctrl+K)"
               >
-                <Search className="w-3 h-3 text-sky-400" />
+                <Search className="w-3 h-3 text-[#79c0ff]" />
                 <span className="hidden sm:inline">Search / Command</span>
-                <kbd className="px-1 py-0.2 text-[9px] rounded-[2px] bg-white/[0.05] text-slate-400">
+                <kbd className="px-1 py-0.2 text-[9px] rounded-[3px] bg-[#0d1117] text-[#8b949e] border border-[#30363d]">
                   Ctrl+K
                 </kbd>
-              </button>
+              </MagneticButton>
 
               {/* Live Benchmark Replay Stream Toggle */}
-              <button
+              <MagneticButton
                 onClick={() => setLiveReplayActive((prev) => !prev)}
-                className={`px-2.5 py-1.5 rounded-[3px] text-[11px] font-mono border inline-flex items-center gap-1.5 transition ${
+                className={`px-2.5 py-1.5 rounded-[6px] text-[11px] font-mono border inline-flex items-center gap-1.5 transition ${
                   liveReplayActive
-                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
-                    : 'bg-[#090c10] text-slate-300 border-white/10 hover:text-white'
+                    ? 'bg-[#2ea043]/20 text-[#56d364] border-[#2ea043]'
+                    : 'bg-[#21262d] text-[#c9d1d9] border-[#30363d] hover:border-[#8b949e]'
                 }`}
               >
                 <Radio
                   className={`w-3 h-3 ${
                     liveReplayActive
-                      ? 'text-emerald-400 animate-pulse'
-                      : 'text-slate-500'
+                      ? 'text-[#56d364] animate-pulse'
+                      : 'text-[#8b949e]'
                   }`}
                 />
                 <span>
                   {liveReplayActive ? 'STREAM: ACTIVE' : 'REPLAY STREAM'}
                 </span>
-              </button>
+              </MagneticButton>
 
               {/* Export CSV */}
               <a
                 href={aegisApi.getExportCsvUrl()}
                 download="aegisnet_forensic_events.csv"
-                className="px-2.5 py-1.5 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white hidden md:inline-flex items-center gap-1.5 transition"
+                className="px-2.5 py-1.5 rounded-[6px] bg-[#21262d] border border-[#30363d] text-[11px] font-mono text-[#c9d1d9] hover:text-white hover:border-[#79c0ff] hidden md:inline-flex items-center gap-1.5 transition"
               >
-                <Download className="w-3 h-3 text-slate-400" />
+                <Download className="w-3 h-3 text-[#79c0ff]" />
                 <span>EXPORT CSV</span>
               </a>
 
               {/* Refresh */}
-              <button
+              <MagneticButton
                 onClick={refreshCoreData}
-                className="px-2.5 py-1.5 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white inline-flex items-center gap-1.5 transition"
+                className="px-2.5 py-1.5 rounded-[6px] bg-[#21262d] border border-[#30363d] text-[11px] font-mono text-[#c9d1d9] hover:text-white hover:border-[#79c0ff] inline-flex items-center gap-1.5 transition"
               >
                 <RefreshCw
-                  className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`}
+                  className={`w-3 h-3 ${loading ? 'animate-spin text-[#79c0ff]' : ''}`}
                 />
                 <span className="hidden sm:inline">SYNC</span>
-              </button>
+              </MagneticButton>
             </div>
           </header>
 

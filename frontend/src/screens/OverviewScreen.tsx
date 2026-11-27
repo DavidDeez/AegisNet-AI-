@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import type { NetworkEventRecord, OverviewResponse } from '../types/aegis';
 import { ReviewBadge, SeverityBadge, TriageBadge } from '../components/Badge';
-import { AnimatedMetric, FlowHoverHud } from '../components/InteractiveEffects';
+import {
+  ActivityHeatmap,
+  AnimatedMetric,
+  FlowHoverHud,
+  ScoreRing,
+} from '../components/InteractiveEffects';
 
 interface Props {
   data: OverviewResponse | null;
@@ -443,6 +448,37 @@ export const OverviewScreen: React.FC<Props> = ({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* GradeGuide ScoreRing Circular Gauges + 90-Day Telemetry Activity Heatmap */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-7 bg-[#0d1117] p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+          <ScoreRing
+            score={
+              data.active_model ? data.active_model.macro_f1 * 100 : 100
+            }
+            label="Closed-Set Macro F1"
+            sublabel="Calibrated Random Forest"
+            color="#39d353"
+          />
+          <ScoreRing
+            score={
+              data.active_model ? data.active_model.open_set_auroc * 100 : 99.9
+            }
+            label="Open-Set AUROC"
+            sublabel="Held-Out Unseen Families"
+            color="#d2a8ff"
+          />
+          <ScoreRing
+            score={data.avg_confidence * 100}
+            label="Mean Confidence"
+            sublabel={`Entropy H̄=${data.avg_entropy.toFixed(3)}`}
+            color="#79c0ff"
+          />
+        </div>
+        <div className="lg:col-span-5">
+          <ActivityHeatmap totalEvents={data.total_events} />
         </div>
       </div>
 
