@@ -182,11 +182,11 @@ export const ElectronCanvasBackground: React.FC = () => {
   const [cursorMode, setCursorMode] = useState<'repel' | 'attract' | 'orbit'>(
     'repel'
   );
-  const [speedMult, setSpeedMult] = useState<number>(1.35);
+  const [speedMult, setSpeedMult] = useState<number>(0.8);
   const [electronCount, setElectronCount] = useState<number>(155);
 
   const modeRef = useRef<'repel' | 'attract' | 'orbit'>('repel');
-  const speedRef = useRef<number>(1.35);
+  const speedRef = useRef<number>(0.8);
   const burstTriggerRef = useRef<((x?: number, y?: number) => void) | null>(
     null
   );
@@ -266,8 +266,8 @@ export const ElectronCanvasBackground: React.FC = () => {
       (_, i) => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 1.55,
-        vy: (Math.random() - 0.5) * 1.55,
+        vx: (Math.random() - 0.5) * 0.48,
+        vy: (Math.random() - 0.5) * 0.48,
         radius: Math.random() * 1.8 + 0.8,
         color: starPalette[i % starPalette.length],
         phase: Math.random() * Math.PI * 2,
@@ -289,10 +289,10 @@ export const ElectronCanvasBackground: React.FC = () => {
         color: '#79c0ff',
       });
 
-      // Spawn 6 excited electrons radiating outward from click/burst point
+      // Spawn 6 gentle electrons radiating outward from click/burst point
       for (let k = 0; k < 6; k++) {
         const angle = (Math.PI * 2 * k) / 6 + Math.random() * 0.4;
-        const spd = 1.6 + Math.random() * 1.4;
+        const spd = 0.45 + Math.random() * 0.45;
         if (particles.length > 210) {
           particles.shift();
         }
@@ -367,15 +367,15 @@ export const ElectronCanvasBackground: React.FC = () => {
             const ny = dy / distance;
 
             if (cMode === 'repel') {
-              p.x -= nx * force * 4.8;
-              p.y -= ny * force * 4.8;
+              p.x -= nx * force * 1.8;
+              p.y -= ny * force * 1.8;
             } else if (cMode === 'attract') {
-              p.x += nx * force * 3.2;
-              p.y += ny * force * 3.2;
+              p.x += nx * force * 1.4;
+              p.y += ny * force * 1.4;
             } else {
-              // Vortex Orbit swirl around cursor
-              p.x += -ny * force * 4.5 + nx * force * 0.9;
-              p.y += nx * force * 4.5 + ny * force * 0.9;
+              // Gentle Vortex Orbit swirl around cursor
+              p.x += -ny * force * 1.7 + nx * force * 0.35;
+              p.y += nx * force * 1.7 + ny * force * 0.35;
             }
 
             // Draw bright laser tether to cursor
@@ -413,7 +413,7 @@ export const ElectronCanvasBackground: React.FC = () => {
 
       // 3. Draw Constellation Filaments + Travelling Network Data Packets Along Filaments!
       ctx.lineWidth = 0.75;
-      const packetProgress = (tickCount * 0.018) % 1;
+      const packetProgress = (tickCount * 0.006) % 1;
 
       for (let i = 0; i < particles.length; i++) {
         const pi = particles[i];
@@ -462,7 +462,9 @@ export const ElectronCanvasBackground: React.FC = () => {
   }, []);
 
   const cycleSpeed = () => {
-    setSpeedMult((prev) => (prev < 1.5 ? 2.4 : prev < 2.6 ? 3.6 : 1.0));
+    setSpeedMult((prev) =>
+      prev < 0.6 ? 0.8 : prev < 0.9 ? 1.2 : prev < 1.4 ? 1.8 : 0.4
+    );
   };
 
   const cycleMode = () => {
