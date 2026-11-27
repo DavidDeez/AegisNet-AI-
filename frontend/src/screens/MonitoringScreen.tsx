@@ -36,62 +36,63 @@ export const MonitoringScreen: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-            <span>INFERENCE LATENCY (AVG / P95)</span>
-            <Clock className="w-4 h-4 text-emerald-400" />
+    <div className="space-y-4">
+      {/* Unified Horizontal Telemetry Ledger (No Corner Icons) */}
+      <div className="bg-[#0d1117] border border-white/10 rounded overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.07] font-mono">
+          <div className="p-4 space-y-1">
+            <div className="text-[10px] text-slate-400">
+              01 // INFERENCE LATENCY (AVG / P95)
+            </div>
+            <div className="text-xl font-semibold text-white">
+              {data.avg_latency_ms.toFixed(1)} ms{' '}
+              <span className="text-sm text-emerald-300">
+                / {data.p95_latency_ms.toFixed(1)} ms
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-500">
+              Peak Observed: {data.max_latency_ms.toFixed(1)} ms
+            </div>
           </div>
-          <div className="text-xl font-mono font-semibold text-slate-100">
-            {data.avg_latency_ms.toFixed(1)} ms{' '}
-            <span className="text-sm text-emerald-300">
-              / {data.p95_latency_ms.toFixed(1)} ms
-            </span>
-          </div>
-          <div className="text-[11px] font-mono text-slate-500">
-            Max Observed: {data.max_latency_ms.toFixed(1)} ms
-          </div>
-        </div>
 
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-            <span>DATA DRIFT (MEAN / MAX PSI)</span>
-            <GitCompare className="w-4 h-4 text-sky-400" />
+          <div className="p-4 space-y-1">
+            <div className="text-[10px] text-slate-400">
+              02 // POPULATION STABILITY INDEX (MEAN / MAX)
+            </div>
+            <div className="text-xl font-semibold text-slate-100">
+              {data.avg_drift_psi.toFixed(4)} /{' '}
+              <span className="text-amber-200">
+                {data.max_drift_psi.toFixed(4)}
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-500">
+              Thresholds: WARN ≥ {data.drift_thresholds.psi_warning} | CRIT ≥{' '}
+              {data.drift_thresholds.psi_critical}
+            </div>
           </div>
-          <div className="text-xl font-mono font-semibold text-sky-300">
-            {data.avg_drift_psi.toFixed(4)} / {data.max_drift_psi.toFixed(4)}
-          </div>
-          <div className="text-[11px] font-mono text-slate-500">
-            Warn ≥ {data.drift_thresholds.psi_warning} | Crit ≥{' '}
-            {data.drift_thresholds.psi_critical}
-          </div>
-        </div>
 
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-            <span>BATCH REQUESTS / FLOWS</span>
-            <Activity className="w-4 h-4 text-purple-400" />
+          <div className="p-4 space-y-1">
+            <div className="text-[10px] text-slate-400">
+              03 // SCORED BATCHES / FLOWS
+            </div>
+            <div className="text-xl font-semibold text-white">
+              {data.total_requests} / {data.total_flows_scored.toLocaleString()}
+            </div>
+            <div className="text-[10px] text-slate-500">
+              Artifact: {data.active_model_version}
+            </div>
           </div>
-          <div className="text-xl font-mono font-semibold text-slate-100">
-            {data.total_requests} / {data.total_flows_scored.toLocaleString()}
-          </div>
-          <div className="text-[11px] font-mono text-slate-500">
-            Active Model: {data.active_model_version}
-          </div>
-        </div>
 
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-1.5">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-            <span>OPERATIONAL ERRORS</span>
-            <AlertCircle className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-xl font-mono font-semibold text-amber-300">
-            {data.error_count}
-          </div>
-          <div className="text-[11px] font-mono text-slate-500">
-            Rejected uploads or validation faults
+          <div className="p-4 space-y-1">
+            <div className="text-[10px] text-slate-400">
+              04 // REJECTED / FAULT PAYLOADS
+            </div>
+            <div className="text-xl font-semibold text-amber-300">
+              {data.error_count}
+            </div>
+            <div className="text-[10px] text-slate-500">
+              Schema & boundary sanitizer
+            </div>
           </div>
         </div>
       </div>

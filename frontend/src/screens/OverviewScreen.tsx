@@ -1,15 +1,5 @@
 import React from 'react';
-import {
-  Activity,
-  AlertTriangle,
-  CheckCircle2,
-  Cpu,
-  HelpCircle,
-  Layers,
-  Radar,
-  ShieldAlert,
-  ArrowUpRight,
-} from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import type { OverviewResponse } from '../types/aegis';
 import { ReviewBadge, SeverityBadge, TriageBadge } from '../components/Badge';
 
@@ -28,200 +18,299 @@ export const OverviewScreen: React.FC<Props> = ({
 }) => {
   if (loading && !data) {
     return (
-      <div className="p-8 text-sm text-slate-400 font-mono">
-        Loading operational telemetry from backend...
+      <div className="p-6 text-xs text-slate-400 font-mono">
+        [SYS] Initializing telemetry stream...
       </div>
     );
   }
 
   if (!data || data.total_events === 0) {
     return (
-      <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-10 text-center space-y-4">
-        <Radar className="w-10 h-10 text-slate-500 mx-auto" />
+      <div className="bg-[#0d1117] border border-white/10 rounded p-10 text-center space-y-4">
+        <div className="text-xs font-mono text-slate-500 uppercase tracking-widest">
+          [TELEMETRY BUFFER EMPTY]
+        </div>
         <div className="space-y-1">
-          <h3 className="text-base font-semibold text-slate-200">
-            No Network Flows Analyzed Yet
+          <h3 className="text-sm font-semibold text-slate-200">
+            Zero Network Flow Records in Active Ledger
           </h3>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            AegisNet never displays fabricated threat metrics. Upload a CSV flow
-            capture or run a reproducible CIC-IDS2017 benchmark evaluation slice
-            in the Detection Center to populate operational telemetry.
+            Ingest a PCAP/CICFlowMeter CSV capture or execute a benchmark evaluation batch in the Detection Center.
           </p>
         </div>
         <button
           onClick={() => onNavigate('detection')}
-          className="px-4 py-2 text-xs font-medium bg-sky-500/20 text-sky-300 border border-sky-500/40 rounded hover:bg-sky-500/30 transition"
+          className="px-4 py-1.5 text-xs font-mono bg-white/5 text-slate-200 border border-white/15 rounded hover:bg-white/10 transition"
         >
-          Open Detection Center
+          OPEN DETECTION CENTER →
         </button>
       </div>
     );
   }
 
   const total = Math.max(1, data.total_events);
+  const benignPct = (data.benign_events / total) * 100;
+  const knownPct = (data.known_attacks / total) * 100;
+  const anomPct = (data.anomalous_unknown / total) * 100;
+  const uncPct = (data.uncertain_events / total) * 100;
+
   const severities: Array<{ key: string; label: string; color: string }> = [
-    { key: 'CRITICAL', label: 'Critical', color: 'bg-red-500' },
-    { key: 'HIGH', label: 'High', color: 'bg-orange-500' },
-    { key: 'MEDIUM', label: 'Medium', color: 'bg-amber-500' },
-    { key: 'LOW', label: 'Low', color: 'bg-sky-500' },
-    { key: 'INFO', label: 'Info (Benign)', color: 'bg-emerald-500' },
+    { key: 'CRITICAL', label: 'SEV-1 // CRITICAL', color: 'bg-red-500' },
+    { key: 'HIGH', label: 'SEV-2 // HIGH', color: 'bg-orange-500' },
+    { key: 'MEDIUM', label: 'SEV-3 // MEDIUM', color: 'bg-amber-400' },
+    { key: 'LOW', label: 'SEV-4 // LOW', color: 'bg-sky-400' },
+    { key: 'INFO', label: 'SEV-5 // BENIGN BASELINE', color: 'bg-emerald-500/80' },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Top KPI Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>ANALYZED FLOWS</span>
-            <Layers className="w-4 h-4 text-sky-400" />
+    <div className="space-y-4">
+      {/* Unified Horizontal Telemetry Ledger (Replaces AI-Style 5 Floating Icon Cards) */}
+      <div className="bg-[#0d1117] border border-white/10 rounded overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.07]">
+          <div className="p-4 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
+              <span>01 // INGESTED FLOWS</span>
+              <span className="text-slate-500">TOTAL</span>
+            </div>
+            <div className="flex items-baseline justify-between pt-0.5">
+              <span className="text-2xl font-mono font-semibold text-white">
+                {data.total_events.toLocaleString()}
+              </span>
+              <span className="text-[11px] font-mono text-amber-300/90">
+                {data.pending_triage} queued
+              </span>
+            </div>
+            <div className="text-[10px] font-mono text-slate-500">
+              Mean IF Percentile: p{data.avg_anomaly_percentile.toFixed(1)}
+            </div>
           </div>
-          <div className="text-2xl font-mono font-semibold text-slate-100">
-            {data.total_events.toLocaleString()}
+
+          <div className="p-4 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
+              <span>02 // KNOWN SIGNATURES</span>
+              <span className="text-red-400 font-semibold">
+                {knownPct.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between pt-0.5">
+              <span className="text-2xl font-mono font-semibold text-red-300">
+                {data.known_attacks.toLocaleString()}
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                P̄={(data.avg_confidence * 100).toFixed(1)}%
+              </span>
+            </div>
+            <div className="text-[10px] font-mono text-slate-500">
+              Calibrated closed-set RF match
+            </div>
           </div>
-          <div className="text-[11px] text-slate-500 font-mono">
-            Pending Analyst Triage: {data.pending_triage}
+
+          <div className="p-4 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
+              <span>03 // OPEN-SET ANOMALIES</span>
+              <span className="text-amber-300 font-semibold">
+                {anomPct.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between pt-0.5">
+              <span className="text-2xl font-mono font-semibold text-amber-200">
+                {data.anomalous_unknown.toLocaleString()}
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                IF ≥ p95.0
+              </span>
+            </div>
+            <div className="text-[10px] font-mono text-slate-500">
+              Unseen structural deviation (non-prob)
+            </div>
+          </div>
+
+          <div className="p-4 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
+              <span>04 // HIGH-ENTROPY QUEUE</span>
+              <span className="text-sky-300 font-semibold">
+                {uncPct.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between pt-0.5">
+              <span className="text-2xl font-mono font-semibold text-sky-200">
+                {data.uncertain_events.toLocaleString()}
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                H̄={data.avg_entropy.toFixed(3)}
+              </span>
+            </div>
+            <div className="text-[10px] font-mono text-slate-500">
+              Normalized Shannon entropy H(p)/ln(K)
+            </div>
+          </div>
+
+          <div className="p-4 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
+              <span>05 // BASELINE BENIGN</span>
+              <span className="text-emerald-400 font-semibold">
+                {benignPct.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between pt-0.5">
+              <span className="text-2xl font-mono font-semibold text-emerald-300">
+                {data.benign_events.toLocaleString()}
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                NOMINAL
+              </span>
+            </div>
+            <div className="text-[10px] font-mono text-slate-500">
+              Within training benign distribution
+            </div>
           </div>
         </div>
 
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>KNOWN ATTACKS</span>
-            <ShieldAlert className="w-4 h-4 text-red-400" />
+        {/* Proportional Traffic Composition Strip */}
+        <div className="px-4 py-2 bg-[#090c10] border-t border-white/[0.07] flex items-center gap-3">
+          <span className="text-[10px] font-mono text-slate-400 shrink-0">
+            COMPOSITION
+          </span>
+          <div className="h-1.5 flex-1 bg-slate-900 rounded-[1px] overflow-hidden flex">
+            <div
+              style={{ width: `${knownPct}%` }}
+              className="bg-red-500 h-full"
+              title={`Known Attacks: ${knownPct.toFixed(1)}%`}
+            />
+            <div
+              style={{ width: `${anomPct}%` }}
+              className="bg-amber-400 h-full"
+              title={`Open-Set Anomalies: ${anomPct.toFixed(1)}%`}
+            />
+            <div
+              style={{ width: `${uncPct}%` }}
+              className="bg-sky-400 h-full"
+              title={`High Entropy / Uncertain: ${uncPct.toFixed(1)}%`}
+            />
+            <div
+              style={{ width: `${benignPct}%` }}
+              className="bg-emerald-500/75 h-full"
+              title={`Benign Baseline: ${benignPct.toFixed(1)}%`}
+            />
           </div>
-          <div className="text-2xl font-mono font-semibold text-red-300">
-            {data.known_attacks.toLocaleString()}
-          </div>
-          <div className="text-[11px] text-slate-500 font-mono">
-            {((data.known_attacks / total) * 100).toFixed(1)}% of traffic | Mean Conf:{' '}
-            {(data.avg_confidence * 100).toFixed(1)}%
-          </div>
-        </div>
-
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>ANOMALOUS / UNKNOWN</span>
-            <AlertTriangle className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-2xl font-mono font-semibold text-purple-300">
-            {data.anomalous_unknown.toLocaleString()}
-          </div>
-          <div className="text-[11px] text-slate-500 font-mono">
-            Isolation Forest Outlier (Not Calibrated Prob)
-          </div>
-        </div>
-
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>UNCERTAIN EVENTS</span>
-            <HelpCircle className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-2xl font-mono font-semibold text-amber-300">
-            {data.uncertain_events.toLocaleString()}
-          </div>
-          <div className="text-[11px] text-slate-500 font-mono">
-            Mean Shannon Entropy: {data.avg_entropy.toFixed(3)}
-          </div>
-        </div>
-
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>VERIFIED BENIGN</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-mono font-semibold text-emerald-300">
-            {data.benign_events.toLocaleString()}
-          </div>
-          <div className="text-[11px] text-slate-500 font-mono">
-            {((data.benign_events / total) * 100).toFixed(1)}% normal baseline
+          <div className="hidden md:flex items-center gap-3 text-[10px] font-mono text-slate-400 shrink-0">
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-red-500 inline-block" /> KNOWN
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-amber-400 inline-block" /> ANOMALY
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-sky-400 inline-block" /> UNCERTAIN
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-emerald-500 inline-block" /> BENIGN
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Middle Analytical Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Triage & Classification Breakdown */}
-        <div className="lg:col-span-2 bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-200">
-                Classification & Open-Set Triage Breakdown
-              </h3>
-              <p className="text-xs text-slate-400">
-                Separates calibrated supervised classifications from Isolation Forest structural anomalies and high-entropy uncertain flows
-              </p>
+      {/* Middle Console Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Classification & Open-Set Triage Ledger (8 cols) */}
+        <div className="lg:col-span-8 bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between">
+          <div>
+            <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-semibold text-slate-200 tracking-wide">
+                  CLASSIFICATION & TRIAGE LEDGER
+                </span>
+                <span className="text-[10px] font-mono text-slate-500">
+                  [GROUPED BY SIGNATURE & TAXONOMY]
+                </span>
+              </div>
+              <button
+                onClick={() => onNavigate('threat-intel')}
+                className="text-[11px] text-slate-300 hover:text-white inline-flex items-center gap-1 font-mono"
+              >
+                DECISION PLANE <ArrowUpRight className="w-3 h-3" />
+              </button>
             </div>
-            <button
-              onClick={() => onNavigate('threat-intel')}
-              className="text-xs text-sky-400 hover:text-sky-300 inline-flex items-center gap-1 font-mono"
-            >
-              Threat Intel <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs font-mono">
+                <thead>
+                  <tr className="border-b border-white/[0.07] text-[10px] text-slate-400 bg-[#090c10]/60">
+                    <th className="py-2 px-4">CLASSIFICATION</th>
+                    <th className="py-2 px-3">TRIAGE STATE</th>
+                    <th className="py-2 px-3 text-right">COUNT</th>
+                    <th className="py-2 px-3 text-right">RATIO</th>
+                    <th className="py-2 px-3 text-right">MEAN P(y|x)</th>
+                    <th className="py-2 px-3 text-right">MEAN ENTROPY</th>
+                    <th className="py-2 px-4 text-right">IF PERCENTILE</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.05]">
+                  {data.attack_class_breakdown.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-white/[0.03]">
+                      <td className="py-2 px-4 font-medium text-slate-100">
+                        {row.predicted_label}
+                      </td>
+                      <td className="py-2 px-3">
+                        <TriageBadge category={row.triage_category} />
+                      </td>
+                      <td className="py-2 px-3 text-right text-slate-200">
+                        {row.count}
+                      </td>
+                      <td className="py-2 px-3 text-right text-slate-400">
+                        {((row.count / total) * 100).toFixed(1)}%
+                      </td>
+                      <td className="py-2 px-3 text-right text-slate-200">
+                        {(row.mean_confidence * 100).toFixed(1)}%
+                      </td>
+                      <td className="py-2 px-3 text-right text-slate-300">
+                        {row.mean_entropy.toFixed(3)}
+                      </td>
+                      <td className="py-2 px-4 text-right text-amber-300/90">
+                        p{row.mean_anomaly_pct.toFixed(1)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-[#21262d] text-slate-400 font-mono">
-                  <th className="py-2 pr-3">PREDICTED LABEL</th>
-                  <th className="py-2 px-3">TRIAGE TAXONOMY</th>
-                  <th className="py-2 px-3 text-right">FLOWS</th>
-                  <th className="py-2 px-3 text-right">SHARE</th>
-                  <th className="py-2 px-3 text-right">MEAN CONFIDENCE</th>
-                  <th className="py-2 px-3 text-right">MEAN ENTROPY</th>
-                  <th className="py-2 pl-3 text-right">ANOMALY PCTL</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#161b22]">
-                {data.attack_class_breakdown.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-[#161b22]/60">
-                    <td className="py-2.5 pr-3 font-mono font-medium text-slate-200">
-                      {row.predicted_label}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <TriageBadge category={row.triage_category} />
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-mono text-slate-200">
-                      {row.count}
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-mono text-slate-400">
-                      {((row.count / total) * 100).toFixed(1)}%
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-mono text-sky-300">
-                      {(row.mean_confidence * 100).toFixed(1)}%
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-mono text-amber-300">
-                      {row.mean_entropy.toFixed(3)}
-                    </td>
-                    <td className="py-2.5 pl-3 text-right font-mono text-purple-300">
-                      p{row.mean_anomaly_pct.toFixed(1)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="px-4 py-2 bg-[#090c10]/60 border-t border-white/[0.07] flex items-center justify-between text-[10px] font-mono text-slate-500">
+            <span>
+              SUPERVISED: CALIBRATED RANDOM FOREST (PLATT SIGMOID, 3-FOLD CV)
+            </span>
+            <span>OPEN-SET: ISOLATION FOREST (BENIGN REFERENCE QUANTILES)</span>
           </div>
         </div>
 
-        {/* Severity Distribution & System Health */}
-        <div className="space-y-6">
-          <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-200">
-              Severity Distribution
-            </h3>
-            <div className="space-y-3">
+        {/* Right Column: Severity Breakdown & Engine Benchmark Metrics (4 cols) */}
+        <div className="lg:col-span-4 space-y-4">
+          <div className="bg-[#0d1117] border border-white/10 rounded">
+            <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between">
+              <span className="text-xs font-mono font-semibold text-slate-200 tracking-wide">
+                SEVERITY ALLOCATION
+              </span>
+              <span className="text-[10px] font-mono text-slate-500">
+                [N={data.total_events}]
+              </span>
+            </div>
+            <div className="p-4 space-y-2.5">
               {severities.map((sev) => {
                 const count = data.severity_distribution[sev.key] || 0;
                 const pct = (count / total) * 100;
                 return (
                   <div key={sev.key} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-300 font-mono">{sev.label}</span>
-                      <span className="text-slate-400 font-mono">
-                        {count} ({pct.toFixed(1)}%)
+                    <div className="flex justify-between text-[11px] font-mono">
+                      <span className="text-slate-300">{sev.label}</span>
+                      <span className="text-slate-400">
+                        {count}{' '}
+                        <span className="text-slate-500">
+                          ({pct.toFixed(1)}%)
+                        </span>
                       </span>
                     </div>
-                    <div className="h-2 w-full bg-[#161b22] rounded overflow-hidden">
+                    <div className="h-1.5 w-full bg-[#07080c] rounded-[1px] overflow-hidden border border-white/[0.06]">
                       <div
                         className={`h-full ${sev.color}`}
                         style={{ width: `${Math.min(100, pct)}%` }}
@@ -233,40 +322,47 @@ export const OverviewScreen: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-200">
-                Inference & Model Status
-              </h3>
-              <Cpu className="w-4 h-4 text-emerald-400" />
+          <div className="bg-[#0d1117] border border-white/10 rounded">
+            <div className="px-4 py-2.5 border-b border-white/[0.07] flex items-center justify-between">
+              <span className="text-xs font-mono font-semibold text-slate-200 tracking-wide">
+                MODEL & CALIBRATION TELEMETRY
+              </span>
+              <button
+                onClick={() => onNavigate('model-lab')}
+                className="text-[10px] font-mono text-slate-400 hover:text-white"
+              >
+                LAB →
+              </button>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              <div className="p-2.5 rounded bg-[#161b22] border border-[#21262d]">
-                <div className="text-slate-400 text-[10px]">ACTIVE MODEL</div>
-                <div className="text-slate-200 truncate mt-0.5">
-                  {data.system_health.active_model_version}
-                </div>
-              </div>
-              <div className="p-2.5 rounded bg-[#161b22] border border-[#21262d]">
-                <div className="text-slate-400 text-[10px]">P95 LATENCY</div>
-                <div className="text-emerald-300 mt-0.5">
-                  {data.system_health.p95_latency_ms.toFixed(1)} ms
-                </div>
-              </div>
-              <div className="p-2.5 rounded bg-[#161b22] border border-[#21262d]">
-                <div className="text-slate-400 text-[10px]">CLOSED-SET F1</div>
-                <div className="text-sky-300 mt-0.5">
+            <div className="grid grid-cols-2 divide-x divide-y divide-white/[0.07] text-xs font-mono">
+              <div className="p-3">
+                <div className="text-slate-500 text-[10px]">CLOSED-SET F1</div>
+                <div className="text-slate-100 font-semibold mt-0.5">
                   {data.active_model
                     ? (data.active_model.macro_f1 * 100).toFixed(2) + '%'
-                    : 'N/A'}
+                    : '—'}
                 </div>
               </div>
-              <div className="p-2.5 rounded bg-[#161b22] border border-[#21262d]">
-                <div className="text-slate-400 text-[10px]">OPEN-SET AUROC</div>
-                <div className="text-purple-300 mt-0.5">
+              <div className="p-3">
+                <div className="text-slate-500 text-[10px]">OPEN-SET AUROC</div>
+                <div className="text-amber-200 font-semibold mt-0.5">
                   {data.active_model
                     ? data.active_model.open_set_auroc.toFixed(4)
-                    : 'N/A'}
+                    : '—'}
+                </div>
+              </div>
+              <div className="p-3">
+                <div className="text-slate-500 text-[10px]">CALIBRATION ECE</div>
+                <div className="text-slate-200 mt-0.5">
+                  {data.active_model
+                    ? data.active_model.expected_calibration_error.toFixed(4)
+                    : '—'}
+                </div>
+              </div>
+              <div className="p-3">
+                <div className="text-slate-500 text-[10px]">MAX DRIFT PSI</div>
+                <div className="text-slate-200 mt-0.5">
+                  {data.system_health.max_drift_psi.toFixed(4)}
                 </div>
               </div>
             </div>
@@ -274,73 +370,74 @@ export const OverviewScreen: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Recent Analyzed Network Events */}
-      <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-200">
-              Recent Analyzed Network Flow Events
-            </h3>
-            <p className="text-xs text-slate-400">
-              Click any flow record to inspect full feature values, uncertainty breakdown, and TreeSHAP attributions
-            </p>
+      {/* Bottom: Live Flow Inspection Stream */}
+      <div className="bg-[#0d1117] border border-white/10 rounded">
+        <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-semibold text-slate-200 tracking-wide">
+              RECENT FLOW TELEMETRY LEDGER
+            </span>
+            <span className="text-[10px] font-mono text-slate-500">
+              [SELECT ROW FOR SHAP & MITIGATION DISPOSITION]
+            </span>
           </div>
           <button
             onClick={() => onNavigate('events')}
-            className="text-xs text-sky-400 hover:text-sky-300 inline-flex items-center gap-1 font-mono"
+            className="text-[11px] text-slate-300 hover:text-white inline-flex items-center gap-1 font-mono"
           >
-            Open Event Explorer <ArrowUpRight className="w-3.5 h-3.5" />
+            FULL EXPLORER <ArrowUpRight className="w-3 h-3" />
           </button>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left border-collapse text-xs font-mono">
             <thead>
-              <tr className="border-b border-[#21262d] text-slate-400 font-mono">
-                <th className="py-2 pr-3">EVENT UID</th>
-                <th className="py-2 px-3">SOURCE → DESTINATION</th>
-                <th className="py-2 px-3">TRIAGE CATEGORY</th>
-                <th className="py-2 px-3">PREDICTED CLASS</th>
-                <th className="py-2 px-3">SEVERITY</th>
-                <th className="py-2 px-3 text-right">CONFIDENCE</th>
+              <tr className="border-b border-white/[0.07] text-[10px] text-slate-400 bg-[#090c10]/60">
+                <th className="py-2 px-4">EVENT UID</th>
+                <th className="py-2 px-3">SRC_ENDPOINT → DST_ENDPOINT</th>
+                <th className="py-2 px-3">TRIAGE STATE</th>
+                <th className="py-2 px-3">CLASSIFICATION</th>
+                <th className="py-2 px-3">SEV</th>
+                <th className="py-2 px-3 text-right">P(y|x)</th>
                 <th className="py-2 px-3 text-right">ENTROPY</th>
-                <th className="py-2 px-3 text-right">ANOMALY SCORE</th>
-                <th className="py-2 pl-3">REVIEW</th>
+                <th className="py-2 px-3 text-right">IF_SCORE (PCTL)</th>
+                <th className="py-2 px-4">DISPOSITION</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#161b22]">
+            <tbody className="divide-y divide-white/[0.05]">
               {data.recent_events.map((ev) => (
                 <tr
                   key={ev.event_uid}
                   onClick={() => onInspectEvent(ev.event_uid)}
-                  className="hover:bg-[#161b22] cursor-pointer transition-colors"
+                  className="hover:bg-white/[0.04] cursor-pointer transition-colors"
                 >
-                  <td className="py-2.5 pr-3 font-mono text-sky-400">
+                  <td className="py-2 px-4 text-slate-200 font-medium">
                     {ev.event_uid}
                   </td>
-                  <td className="py-2.5 px-3 font-mono text-slate-300">
+                  <td className="py-2 px-3 text-slate-300">
                     {ev.src_ip}:{ev.src_port} → {ev.dst_ip}:{ev.dst_port}{' '}
-                    <span className="text-slate-500">({ev.protocol})</span>
+                    <span className="text-slate-500">[{ev.protocol}]</span>
                   </td>
-                  <td className="py-2.5 px-3">
+                  <td className="py-2 px-3">
                     <TriageBadge category={ev.triage_category} />
                   </td>
-                  <td className="py-2.5 px-3 font-mono text-slate-200">
+                  <td className="py-2 px-3 text-slate-100">
                     {ev.predicted_label}
                   </td>
-                  <td className="py-2.5 px-3">
+                  <td className="py-2 px-3">
                     <SeverityBadge severity={ev.severity} />
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-sky-300">
+                  <td className="py-2 px-3 text-right text-slate-200">
                     {(ev.supervised_confidence * 100).toFixed(1)}%
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-amber-300">
+                  <td className="py-2 px-3 text-right text-slate-300">
                     {ev.predictive_entropy.toFixed(3)}
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-purple-300">
-                    {ev.anomaly_score.toFixed(3)} (p{ev.anomaly_percentile.toFixed(1)})
+                  <td className="py-2 px-3 text-right text-amber-300/90">
+                    {ev.anomaly_score.toFixed(3)} (p
+                    {ev.anomaly_percentile.toFixed(1)})
                   </td>
-                  <td className="py-2.5 pl-3">
+                  <td className="py-2 px-4">
                     <ReviewBadge status={ev.review_status} />
                   </td>
                 </tr>

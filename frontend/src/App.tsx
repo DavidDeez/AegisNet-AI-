@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Shield,
   LayoutDashboard,
   Crosshair,
   Radar,
@@ -13,7 +12,6 @@ import {
   Search,
   Radio,
   Download,
-  Zap,
   X,
 } from 'lucide-react';
 import { aegisApi } from './api/client';
@@ -29,14 +27,14 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { TriageBadge } from './components/Badge';
 
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'threat-intel', label: 'Threat Intelligence', icon: Crosshair },
-  { id: 'detection', label: 'Detection Center', icon: Radar },
-  { id: 'events', label: 'Event Explorer', icon: ListFilter },
-  { id: 'explainability', label: 'Explainability (SHAP)', icon: Sparkles },
-  { id: 'model-lab', label: 'Model Lab', icon: FlaskConical },
-  { id: 'monitoring', label: 'System Monitoring', icon: Activity },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'overview', key: '1', label: 'Overview', icon: LayoutDashboard },
+  { id: 'threat-intel', key: '2', label: 'Threat Intelligence', icon: Crosshair },
+  { id: 'detection', key: '3', label: 'Detection Center', icon: Radar },
+  { id: 'events', key: '4', label: 'Event Explorer', icon: ListFilter },
+  { id: 'explainability', key: '5', label: 'Explainability (SHAP)', icon: Sparkles },
+  { id: 'model-lab', key: '6', label: 'Model Lab', icon: FlaskConical },
+  { id: 'monitoring', key: '7', label: 'System Monitoring', icon: Activity },
+  { id: 'settings', key: '8', label: 'Settings', icon: Settings },
 ];
 
 export const App: React.FC = () => {
@@ -49,7 +47,7 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [backendError, setBackendError] = useState<string | null>(null);
 
-  // Live Benchmark Replay Stream simulator state
+  // Live Benchmark Replay Stream state
   const [liveReplayActive, setLiveReplayActive] = useState<boolean>(false);
   const [replaySeed, setReplaySeed] = useState<number>(301);
   const [streamToast, setStreamToast] = useState<string | null>(null);
@@ -59,6 +57,20 @@ export const App: React.FC = () => {
   // Command Palette (Ctrl+K) state
   const [cmdOpen, setCmdOpen] = useState<boolean>(false);
   const [cmdQuery, setCmdQuery] = useState<string>('');
+
+  // Live UTC Clock for bottom console status bar
+  const [utcClock, setUtcClock] = useState<string>(() =>
+    new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
+  );
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setUtcClock(
+        new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
+      );
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
 
   const refreshCoreData = useCallback(async () => {
     setLoading(true);
@@ -75,8 +87,7 @@ export const App: React.FC = () => {
       }
     } catch (err: any) {
       setBackendError(
-        err.message ||
-          'Unable to reach AegisNet FastAPI backend.'
+        err.message || 'Unable to reach AegisNet FastAPI backend.'
       );
     } finally {
       setLoading(false);
@@ -87,21 +98,32 @@ export const App: React.FC = () => {
     refreshCoreData();
   }, []);
 
-  // Keyboard shortcut Ctrl+K / Cmd+K for Command Palette
+  // Keyboard shortcuts: Ctrl+K for Command Palette, 1-8 for direct screen switching
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setCmdOpen((prev) => !prev);
-      } else if (e.key === 'Escape') {
+        return;
+      }
+      if (e.key === 'Escape') {
         setCmdOpen(false);
+        return;
+      }
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || cmdOpen) {
+        return;
+      }
+      const found = NAV_ITEMS.find((n) => n.key === e.key);
+      if (found && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setActiveTab(found.id);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [cmdOpen]);
 
-  // Live Benchmark Replay Stream loop (scores 10 real benchmark flows every 7s when enabled)
+  // Live Benchmark Replay Stream loop
   useEffect(() => {
     if (!liveReplayActive) return;
     let cancelled = false;
@@ -115,7 +137,7 @@ export const App: React.FC = () => {
           const attacks = res.triage_summary['KNOWN_ATTACK'] || 0;
           const anomalies = res.triage_summary['ANOMALOUS_UNKNOWN'] || 0;
           setStreamToast(
-            `Replay Batch ${res.batch_id}: +10 flows scored (${attacks} known attacks, ${anomalies} open-set anomalies)`
+            `[REPLAY // ${res.batch_id}] +10 flows scored (${attacks} known signatures, ${anomalies} open-set anomalies)`
           );
           await refreshCoreData();
         }
@@ -152,7 +174,7 @@ export const App: React.FC = () => {
       setReplaySeed(nextSeed);
       const res = await aegisApi.analyzeBenchmarkSlice(40, true, nextSeed);
       setStreamToast(
-        `Scored 40 CIC-IDS2017 benchmark flows in ${res.latency_ms} ms (${res.batch_id})`
+        `[BATCH // ${res.batch_id}] Scored 40 CIC-IDS2017 flows in ${res.latency_ms} ms`
       );
       await refreshCoreData();
     } finally {
@@ -173,316 +195,354 @@ export const App: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen text-[#ecf2f8] flex relative">
-      {/* Left Glossy Glass Operations Sidebar */}
-      <aside className="w-64 bg-[#0d1117] border-r border-white/10 flex flex-col justify-between shrink-0 z-20">
-        <div>
-          <div className="p-5 border-b border-white/10 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400/30 to-purple-500/20 border border-sky-400/50 flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.3)]">
-              <Shield className="w-4 h-4 text-sky-300" />
-            </div>
-            <div>
-              <div className="text-sm font-bold tracking-wider text-white">
-                AEGISNET
+    <div className="min-h-screen text-slate-200 flex flex-col">
+      <div className="flex-1 flex min-h-0">
+        {/* Left Smoked-Glass SOC Console Sidebar */}
+        <aside className="w-60 bg-[#0d1117] border-r border-white/[0.08] flex flex-col justify-between shrink-0 z-20">
+          <div>
+            {/* Technical Wordmark Header (No Generic Glowing Shield Icon) */}
+            <div className="px-4 py-3.5 border-b border-white/[0.08] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2 h-4 bg-slate-100 rounded-[1px]" />
+                <div>
+                  <div className="text-xs font-mono font-bold tracking-widest text-white">
+                    AEGIS // NET
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500">
+                    FLOW NIDS & OPEN-SET XAI
+                  </div>
+                </div>
               </div>
-              <div className="text-[10px] font-mono text-sky-300/80">
-                NIDS & OPEN-SET XAI
-              </div>
-            </div>
-          </div>
-
-          <nav className="p-3 space-y-1.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                    isActive
-                      ? 'bg-gradient-to-r from-sky-500/25 to-purple-500/15 text-white border border-sky-400/40 shadow-[0_0_20px_rgba(56,189,248,0.2)]'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-white/5 border border-transparent'
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <Icon
-                      className={`w-4 h-4 ${
-                        isActive ? 'text-sky-300' : 'text-slate-400'
-                      }`}
-                    />
-                    <span>{item.label}</span>
-                  </span>
-                  {item.id === 'events' && overview && overview.pending_triage > 0 && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-mono rounded-full bg-red-500/25 text-red-200 border border-red-400/40">
-                      {overview.pending_triage}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Footer Status Glass Card */}
-        <div className="p-4 m-3 rounded-xl bg-[#161b22] border border-white/10 space-y-2 text-[11px] font-mono">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400">ENGINE STATUS</span>
-            <span
-              className={`inline-flex items-center gap-1.5 font-semibold ${
-                overview?.system_health?.ml_engine_ready
-                  ? 'text-emerald-300'
-                  : 'text-amber-300'
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
-              {overview?.system_health?.ml_engine_ready ? 'ONLINE' : 'SYNCING'}
-            </span>
-          </div>
-          <div className="text-slate-300 truncate">
-            Model: {overview?.system_health?.active_model_version || '—'}
-          </div>
-          <div className="text-slate-400 flex items-center justify-between">
-            <span>Mode:</span>
-            <span className="text-sky-300">
-              {liveReplayActive ? 'Live Replay Stream' : 'Batch / API Verified'}
-            </span>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Glossy Glass Top Header */}
-        <header className="h-16 bg-[#0d1117] border-b border-white/10 px-6 flex items-center justify-between sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <h1 className="text-base font-semibold text-white tracking-tight">
-              {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
-            </h1>
-            <span className="text-xs font-mono text-slate-400 hidden xl:inline">
-              | Calibrated RF + Isolation Forest Open-Set Triage + TreeSHAP
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            {/* Command Palette Trigger */}
-            <button
-              onClick={() => setCmdOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-[#161b22] border border-white/10 text-xs font-mono text-slate-300 hover:text-white hover:border-sky-400/40 inline-flex items-center gap-2 transition"
-              title="Open Quick Command Palette (Ctrl+K)"
-            >
-              <Search className="w-3.5 h-3.5 text-sky-400" />
-              <span className="hidden sm:inline">Quick Search & Actions</span>
-              <kbd className="px-1.5 py-0.5 text-[10px] rounded bg-black/40 border border-white/10 text-slate-400">
-                Ctrl+K
-              </kbd>
-            </button>
-
-            {/* Live Benchmark Replay Stream Toggle */}
-            <button
-              onClick={() => setLiveReplayActive((prev) => !prev)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium border inline-flex items-center gap-2 transition ${
-                liveReplayActive
-                  ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400/50 shadow-[0_0_18px_rgba(16,185,129,0.3)]'
-                  : 'bg-[#161b22] text-slate-300 border-white/10 hover:text-white'
-              }`}
-              title="Continuously stream & score 10 reproducible CIC-IDS2017 benchmark flows every 7.5 seconds"
-            >
-              <Radio
-                className={`w-3.5 h-3.5 ${
-                  liveReplayActive
-                    ? 'text-emerald-300 animate-pulse'
-                    : 'text-slate-400'
-                }`}
-              />
-              <span>
-                {liveReplayActive ? 'Live Replay: ON' : 'Live Replay Stream'}
+              <span className="px-1.5 py-0.5 text-[9px] font-mono text-slate-400 bg-white/[0.04] border border-white/10 rounded-[2px]">
+                v1.0
               </span>
-            </button>
+            </div>
 
-            {/* Export CSV Report Shortcut */}
-            <a
-              href={aegisApi.getExportCsvUrl()}
-              download="aegisnet_forensic_events.csv"
-              className="px-3 py-1.5 rounded-xl bg-[#161b22] border border-white/10 text-xs font-mono text-sky-300 hover:text-white hover:border-sky-400/40 hidden md:inline-flex items-center gap-1.5 transition"
-              title="Download forensic CSV report of analyzed events"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </a>
+            <div className="px-4 pt-3 pb-1 text-[10px] font-mono text-slate-500 tracking-wider">
+              OPERATIONS CONSOLE
+            </div>
 
-            {/* Refresh */}
-            <button
-              onClick={refreshCoreData}
-              className="px-3 py-1.5 rounded-xl bg-[#161b22] border border-white/10 text-xs font-mono text-slate-200 hover:text-white inline-flex items-center gap-1.5 transition"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-sky-400' : ''}`}
-              />
-              <span className="hidden sm:inline">Sync</span>
-            </button>
+            <nav className="px-2.5 py-1 space-y-0.5">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-[3px] text-xs font-mono transition-colors ${
+                      isActive
+                        ? 'bg-white/[0.08] text-white border-l-2 border-l-slate-100 font-medium'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Icon
+                        className={`w-3.5 h-3.5 ${
+                          isActive ? 'text-slate-100' : 'text-slate-500'
+                        }`}
+                      />
+                      <span>{item.label}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      {item.id === 'events' &&
+                        overview &&
+                        overview.pending_triage > 0 && (
+                          <span className="px-1.5 py-0.2 text-[10px] font-mono rounded-[2px] bg-red-500/15 text-red-300 border border-red-500/30">
+                            {overview.pending_triage}
+                          </span>
+                        )}
+                      <span className="text-[10px] text-slate-600">
+                        [{item.key}]
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
-        </header>
 
-        {/* Live Replay Stream Banner Toast */}
-        {streamToast && (
-          <div className="mx-6 mt-4 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-500/20 via-purple-500/15 to-emerald-500/20 border border-sky-400/35 backdrop-blur-xl flex items-center justify-between text-xs font-mono text-sky-100 shadow-[0_0_24px_rgba(56,189,248,0.18)]">
-            <span className="flex items-center gap-2">
-              <Zap className="w-3.5 h-3.5 text-sky-300" />
-              {streamToast}
-            </span>
-            <button
-              onClick={() => setStreamToast(null)}
-              className="text-slate-400 hover:text-white"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+          {/* Compact Telemetry Metadata Block */}
+          <div className="p-3 m-2.5 rounded-[3px] bg-[#090c10] border border-white/[0.07] space-y-1.5 text-[10px] font-mono">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">PIPELINE</span>
+              <span
+                className={`inline-flex items-center gap-1.5 ${
+                  overview?.system_health?.ml_engine_ready
+                    ? 'text-emerald-400'
+                    : 'text-amber-400'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                {overview?.system_health?.ml_engine_ready ? 'READY' : 'SYNC'}
+              </span>
+            </div>
+            <div className="text-slate-400 truncate">
+              ID: {overview?.system_health?.active_model_version || '—'}
+            </div>
+            <div className="text-slate-500 flex items-center justify-between">
+              <span>INGEST:</span>
+              <span className="text-slate-300">
+                {liveReplayActive ? 'REPLAY_STREAM' : 'BATCH_VERIFIED'}
+              </span>
+            </div>
           </div>
-        )}
+        </aside>
 
-        {/* Body */}
-        <main className="p-6 flex-1 overflow-y-auto">
-          {backendError && (
-            <div className="mb-6 bg-red-950/60 border border-red-400/40 backdrop-blur-xl rounded-xl p-4 text-xs font-mono text-red-200">
-              Backend Connection Alert: {backendError}
+        {/* Main Console Viewport */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top Console Bar */}
+          <header className="h-12 bg-[#0d1117] border-b border-white/[0.08] px-5 flex items-center justify-between sticky top-0 z-10">
+            <div className="flex items-center gap-2.5 font-mono">
+              <span className="text-[11px] text-slate-500">CONSOLE //</span>
+              <h1 className="text-xs font-semibold text-white uppercase tracking-wider">
+                {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Command Palette Trigger */}
+              <button
+                onClick={() => setCmdOpen(true)}
+                className="px-2.5 py-1 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white hover:border-white/25 inline-flex items-center gap-2 transition"
+                title="Open Command Palette (Ctrl+K)"
+              >
+                <Search className="w-3 h-3 text-slate-400" />
+                <span className="hidden sm:inline">Search / Command</span>
+                <kbd className="px-1 py-0.2 text-[9px] rounded-[2px] bg-white/[0.05] text-slate-400">
+                  Ctrl+K
+                </kbd>
+              </button>
+
+              {/* Live Benchmark Replay Stream Toggle */}
+              <button
+                onClick={() => setLiveReplayActive((prev) => !prev)}
+                className={`px-2.5 py-1 rounded-[3px] text-[11px] font-mono border inline-flex items-center gap-1.5 transition ${
+                  liveReplayActive
+                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                    : 'bg-[#090c10] text-slate-300 border-white/10 hover:text-white'
+                }`}
+              >
+                <Radio
+                  className={`w-3 h-3 ${
+                    liveReplayActive
+                      ? 'text-emerald-400 animate-pulse'
+                      : 'text-slate-500'
+                  }`}
+                />
+                <span>
+                  {liveReplayActive ? 'STREAM: ACTIVE' : 'REPLAY STREAM'}
+                </span>
+              </button>
+
+              {/* Export CSV */}
+              <a
+                href={aegisApi.getExportCsvUrl()}
+                download="aegisnet_forensic_events.csv"
+                className="px-2.5 py-1 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white hidden md:inline-flex items-center gap-1.5 transition"
+              >
+                <Download className="w-3 h-3 text-slate-400" />
+                <span>EXPORT CSV</span>
+              </a>
+
+              {/* Refresh */}
+              <button
+                onClick={refreshCoreData}
+                className="px-2.5 py-1 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white inline-flex items-center gap-1.5 transition"
+              >
+                <RefreshCw
+                  className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`}
+                />
+                <span className="hidden sm:inline">SYNC</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Stream Activity Banner */}
+          {streamToast && (
+            <div className="mx-5 mt-3 px-3.5 py-2 rounded-[3px] bg-[#0d1117] border border-white/15 border-l-2 border-l-emerald-400 flex items-center justify-between text-xs font-mono text-slate-200">
+              <span>{streamToast}</span>
+              <button
+                onClick={() => setStreamToast(null)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
-          {activeTab === 'overview' && (
-            <OverviewScreen
-              data={overview}
-              loading={loading}
-              onInspectEvent={handleInspectEvent}
-              onNavigate={setActiveTab}
-            />
-          )}
+          {/* Main Workspace */}
+          <main className="p-5 flex-1 overflow-y-auto">
+            {backendError && (
+              <div className="mb-4 bg-red-950/50 border border-red-500/40 rounded-[3px] p-3 text-xs font-mono text-red-200">
+                [ERR_BACKEND_UNREACHABLE] {backendError}
+              </div>
+            )}
 
-          {activeTab === 'threat-intel' && (
-            <ThreatIntelScreen
-              data={threatIntel}
-              loading={loading}
-              onInspectEvent={handleInspectEvent}
-            />
-          )}
+            {activeTab === 'overview' && (
+              <OverviewScreen
+                data={overview}
+                loading={loading}
+                onInspectEvent={handleInspectEvent}
+                onNavigate={setActiveTab}
+              />
+            )}
 
-          {activeTab === 'detection' && (
-            <DetectionCenterScreen
-              onBatchAnalyzed={refreshCoreData}
-              onInspectEvent={handleInspectEvent}
-            />
-          )}
+            {activeTab === 'threat-intel' && (
+              <ThreatIntelScreen
+                data={threatIntel}
+                loading={loading}
+                onInspectEvent={handleInspectEvent}
+              />
+            )}
 
-          {activeTab === 'events' && (
-            <EventExplorerScreen
-              selectedEventUid={selectedEventUid}
-              onSelectEventUid={setSelectedEventUid}
-              onOpenExplainability={handleOpenExplainability}
-              onEventUpdated={refreshCoreData}
-            />
-          )}
+            {activeTab === 'detection' && (
+              <DetectionCenterScreen
+                onBatchAnalyzed={refreshCoreData}
+                onInspectEvent={handleInspectEvent}
+              />
+            )}
 
-          {activeTab === 'explainability' && (
-            <ExplainabilityScreen
-              selectedEventUid={selectedEventUid}
-              recentEvents={overview?.recent_events || []}
-              onSelectEventUid={setSelectedEventUid}
-            />
-          )}
+            {activeTab === 'events' && (
+              <EventExplorerScreen
+                selectedEventUid={selectedEventUid}
+                onSelectEventUid={setSelectedEventUid}
+                onOpenExplainability={handleOpenExplainability}
+                onEventUpdated={refreshCoreData}
+              />
+            )}
 
-          {activeTab === 'model-lab' && (
-            <ModelLabScreen onModelTrained={refreshCoreData} />
-          )}
+            {activeTab === 'explainability' && (
+              <ExplainabilityScreen
+                selectedEventUid={selectedEventUid}
+                recentEvents={overview?.recent_events || []}
+                onSelectEventUid={setSelectedEventUid}
+              />
+            )}
 
-          {activeTab === 'monitoring' && <MonitoringScreen />}
+            {activeTab === 'model-lab' && (
+              <ModelLabScreen onModelTrained={refreshCoreData} />
+            )}
 
-          {activeTab === 'settings' && (
-            <SettingsScreen onSettingsChanged={refreshCoreData} />
-          )}
-        </main>
+            {activeTab === 'monitoring' && <MonitoringScreen />}
+
+            {activeTab === 'settings' && (
+              <SettingsScreen onSettingsChanged={refreshCoreData} />
+            )}
+          </main>
+        </div>
       </div>
 
-      {/* Glossy Glassmorphic Command Palette Modal (Ctrl+K) */}
+      {/* Bottom Terminal Status Bar */}
+      <footer className="h-7 bg-[#090c10] border-t border-white/[0.08] px-4 flex items-center justify-between text-[10px] font-mono text-slate-400 select-none z-20">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5 text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            ENGINE_ONLINE
+          </span>
+          <span className="hidden sm:inline">
+            MODEL: {overview?.system_health?.active_model_version || '—'}
+          </span>
+          <span className="hidden md:inline">
+            XAI: TreeSHAP (Additive Path Decomposition)
+          </span>
+          <span className="hidden lg:inline">
+            P95_LATENCY:{' '}
+            {overview?.system_health?.p95_latency_ms?.toFixed(1) || '0.0'} ms
+          </span>
+          <span className="hidden lg:inline">
+            PSI_MAX:{' '}
+            {overview?.system_health?.max_drift_psi?.toFixed(4) || '0.0000'}
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:inline text-slate-500">
+            KEYS: [1-8] NAVIGATE // [CTRL+K] COMMAND
+          </span>
+          <span className="text-slate-300">{utcClock}</span>
+        </div>
+      </footer>
+
+      {/* Command Palette Modal (Ctrl+K) — Clinical Console Style (No Emojis) */}
       {cmdOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-md flex items-start justify-center pt-20 p-4"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center pt-20 p-4"
           onClick={() => setCmdOpen(false)}
         >
           <div
-            className="glass-modal w-full max-w-2xl rounded-2xl overflow-hidden"
+            className="glass-modal w-full max-w-2xl rounded-[4px] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-white/15 flex items-center gap-3">
-              <Search className="w-4 h-4 text-sky-400" />
+            <div className="p-3.5 border-b border-white/10 flex items-center gap-3">
+              <Search className="w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 autoFocus
-                placeholder="Search Event UID, Source/Dest IP, Attack Class, or execute action..."
+                placeholder="Query event_uid, src_ip, dst_ip, signature, or execute command..."
                 value={cmdQuery}
                 onChange={(e) => setCmdQuery(e.target.value)}
-                className="w-full bg-transparent text-sm font-mono text-white focus:outline-none"
+                className="w-full bg-transparent text-xs font-mono text-white focus:outline-none"
               />
               <button
                 onClick={() => setCmdOpen(false)}
-                className="text-xs font-mono text-slate-400 hover:text-white px-2 py-0.5 rounded border border-white/10"
+                className="text-[10px] font-mono text-slate-400 hover:text-white px-1.5 py-0.5 rounded-[2px] border border-white/10"
               >
                 ESC
               </button>
             </div>
 
-            <div className="p-4 max-h-96 overflow-y-auto space-y-4">
-              {/* Quick Operations */}
+            <div className="p-3.5 max-h-96 overflow-y-auto space-y-4">
               <div className="space-y-1.5">
-                <div className="text-[10px] font-mono text-sky-300/80 uppercase tracking-wider">
-                  Quick SOC Actions
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  COMMANDS
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
                     onClick={handleQuickBenchmark}
-                    className="p-2.5 rounded-xl bg-white/5 hover:bg-sky-500/20 border border-white/10 hover:border-sky-400/40 text-left text-xs font-mono flex items-center justify-between transition"
+                    className="p-2.5 rounded-[3px] bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-left text-xs font-mono flex items-center justify-between transition"
                   >
-                    <span className="text-slate-100">
-                      ⚡ Score 40 CIC-IDS2017 Flows Now
+                    <span className="text-slate-200">
+                      EXEC // BENCHMARK_SLICE_40
                     </span>
-                    <span className="text-sky-300 text-[10px]">RUN</span>
+                    <span className="text-slate-400 text-[10px]">[ENTER]</span>
                   </button>
                   <button
                     onClick={() => {
                       setLiveReplayActive((prev) => !prev);
                       setCmdOpen(false);
                     }}
-                    className="p-2.5 rounded-xl bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-400/40 text-left text-xs font-mono flex items-center justify-between transition"
+                    className="p-2.5 rounded-[3px] bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-left text-xs font-mono flex items-center justify-between transition"
                   >
-                    <span className="text-slate-100">
-                      📡 {liveReplayActive ? 'Stop' : 'Start'} Live Replay Stream
+                    <span className="text-slate-200">
+                      STREAM // {liveReplayActive ? 'STOP_REPLAY' : 'START_REPLAY'}
                     </span>
-                    <span className="text-emerald-300 text-[10px]">TOGGLE</span>
+                    <span className="text-slate-400 text-[10px]">[TOGGLE]</span>
                   </button>
                 </div>
               </div>
 
-              {/* Matching Events */}
               <div className="space-y-1.5">
-                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                  Matching Analyzed Network Flows ({recentMatches.length})
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  MATCHING FLOW RECORDS ({recentMatches.length})
                 </div>
                 <div className="space-y-1">
                   {recentMatches.slice(0, 8).map((ev) => (
                     <div
                       key={ev.event_uid}
                       onClick={() => handleInspectEvent(ev.event_uid)}
-                      className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer flex items-center justify-between text-xs font-mono transition"
+                      className="p-2 rounded-[3px] bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.07] cursor-pointer flex items-center justify-between text-xs font-mono transition"
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className="text-sky-300 font-semibold">
+                        <span className="text-slate-200 font-semibold">
                           {ev.event_uid}
                         </span>
-                        <span className="text-slate-300">
+                        <span className="text-slate-400">
                           {ev.src_ip} → {ev.dst_ip}:{ev.dst_port}
                         </span>
                         <TriageBadge category={ev.triage_category} />
                       </div>
                       <span className="text-slate-400">
-                        Conf {(ev.supervised_confidence * 100).toFixed(0)}% | p
+                        P={(ev.supervised_confidence * 100).toFixed(0)}% | p
                         {ev.anomaly_percentile.toFixed(0)}
                       </span>
                     </div>
