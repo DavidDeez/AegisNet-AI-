@@ -4,115 +4,55 @@ import type { NetworkEventRecord } from '../types/aegis';
 import { SeverityBadge, TriageBadge } from './Badge';
 
 /**
- * 0. Bespoke AegisNet Vector Crest & Wordmark Logo with Continuous Rotating Orbital Rings
- * and GradeGuide `.holographic-text` Brand Title.
+ * 0. Crisp, High-Contrast AegisNet Shield + "A" Monogram Logo & Legible Wordmark
  */
 export const AegisLogo: React.FC<{
   collapsed?: boolean;
   size?: number;
 }> = ({ collapsed = false, size = 36 }) => {
   return (
-    <div className="flex items-center gap-3 select-none group">
+    <div className="flex items-center gap-3 select-none">
       <div
         style={{ width: size, height: size }}
-        className="relative shrink-0 flex items-center justify-center float-anim-1"
+        className="relative shrink-0 flex items-center justify-center rounded-lg bg-[#161b22] border border-[#30363d] shadow-sm"
       >
-        <div className="absolute inset-0 rounded-lg bg-[#79c0ff]/25 blur-md group-hover:bg-[#d2a8ff]/40 transition-all duration-300" />
-
         <svg
           viewBox="0 0 64 64"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full relative z-10 draw-icon drop-shadow-[0_0_10px_rgba(121,192,255,0.45)]"
+          className="w-[82%] h-[82%]"
         >
-          <defs>
-            <linearGradient
-              id="aegisOuterGrad"
-              x1="6"
-              y1="4"
-              x2="58"
-              y2="60"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop offset="0%" stopColor="#79c0ff" />
-              <stop offset="50%" stopColor="#d2a8ff" />
-              <stop offset="100%" stopColor="#ff7b72" />
-            </linearGradient>
-            <linearGradient
-              id="aegisCoreGrad"
-              x1="18"
-              y1="14"
-              x2="46"
-              y2="52"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop offset="0%" stopColor="rgba(121, 192, 255, 0.28)" />
-              <stop offset="100%" stopColor="rgba(22, 27, 34, 0.9)" />
-            </linearGradient>
-          </defs>
-
-          {/* Outer Precision Hexagonal Aegis Frame */}
-          <polygon
-            points="32,3 57,17.5 57,46.5 32,61 7,46.5 7,17.5"
-            fill="#0d1117"
-            stroke="url(#aegisOuterGrad)"
-            strokeWidth="2.2"
-          />
-
-          {/* Inner Tactical Shield Contour */}
+          {/* Bold High-Contrast Tactical Shield */}
           <path
-            d="M32 9L50 19.5V35.5C50 45.2 42.3 52.8 32 56C21.7 52.8 14 45.2 14 35.5V19.5L32 9Z"
-            fill="url(#aegisCoreGrad)"
+            d="M32 6L54 16V33C54 46.5 44.6 55.8 32 59C19.4 55.8 10 46.5 10 33V16L32 6Z"
+            fill="#0d1117"
             stroke="#79c0ff"
-            strokeWidth="1.3"
+            strokeWidth="3.5"
+            strokeLinejoin="round"
           />
 
-          {/* Perpetually Rotating Orbital Electron Rings */}
-          <g className="orbit-cw">
-            <ellipse
-              cx="32"
-              cy="32"
-              rx="17"
-              ry="8"
-              stroke="#d2a8ff"
-              strokeWidth="1.2"
-              strokeDasharray="4 2"
-            />
-            <circle cx="49" cy="32" r="2" fill="#d2a8ff" />
-          </g>
-
-          <g className="orbit-ccw">
-            <ellipse
-              cx="32"
-              cy="32"
-              rx="8"
-              ry="17"
-              stroke="#79c0ff"
-              strokeWidth="1.2"
-              strokeDasharray="4 2"
-            />
-            <circle cx="32" cy="15" r="2" fill="#79c0ff" />
-          </g>
-
-          {/* Central Pulsing Sentinel Core */}
-          <circle
-            cx="32"
-            cy="32"
-            r="4.2"
-            fill="#79c0ff"
+          {/* Bold Legible Geometric 'A' Monogram Inside Shield */}
+          <path
+            d="M32 17L20 45M32 17L44 45M24 36H40"
             stroke="#ffffff"
-            strokeWidth="1.4"
+            strokeWidth="4.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
+
+          {/* Apex Sentinel Dot */}
+          <circle cx="32" cy="17" r="2.8" fill="#79c0ff" />
         </svg>
       </div>
 
       {!collapsed && (
         <div className="leading-none overflow-hidden">
-          <div className="brand-title text-[17px] font-bold tracking-tight holographic-text glitch-title">
-            AEGISNET.ai
+          <div className="font-heading text-[18px] font-bold tracking-tight flex items-center">
+            <span className="text-white">AEGIS</span>
+            <span className="text-[#79c0ff]">NET</span>
           </div>
-          <div className="text-[10px] font-mono text-[#8b949e] mt-1 truncate">
-            Open-Set NIDS & XAI
+          <div className="text-[10px] font-mono text-[#8b949e] mt-1 tracking-wider uppercase truncate">
+            Threat Intelligence
           </div>
         </div>
       )}
@@ -247,17 +187,16 @@ export const ElectronCanvasBackground: React.FC = () => {
       color: string;
     }
 
+    // Subtle monochrome silver-slate palette from GradeGuide (non-flashy, steady opacity)
     const starPalette = [
-      '#79c0ff', // GradeGuide holographic cyan
-      '#d2a8ff', // GradeGuide holographic violet
-      '#f0f6fc', // Bright white star
-      '#56d364', // Emerald telemetry electron
-      '#ff7b72', // Coral threat electron
+      'rgba(201, 209, 217, 0.48)',
+      'rgba(201, 209, 217, 0.36)',
+      'rgba(139, 148, 158, 0.42)',
     ];
 
     const initialCount = Math.min(
-      175,
-      Math.max(110, Math.floor((canvas.width * canvas.height) / 10500))
+      145,
+      Math.max(85, Math.floor((canvas.width * canvas.height) / 12000))
     );
     setElectronCount(initialCount);
 
@@ -266,11 +205,11 @@ export const ElectronCanvasBackground: React.FC = () => {
       (_, i) => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.48,
-        vy: (Math.random() - 0.5) * 0.48,
-        radius: Math.random() * 1.8 + 0.8,
+        vx: (Math.random() - 0.5) * 0.45,
+        vy: (Math.random() - 0.5) * 0.45,
+        radius: Math.random() * 1.3 + 0.6,
         color: starPalette[i % starPalette.length],
-        phase: Math.random() * Math.PI * 2,
+        phase: 0,
       })
     );
 
@@ -377,14 +316,6 @@ export const ElectronCanvasBackground: React.FC = () => {
               p.x += -ny * force * 1.7 + nx * force * 0.35;
               p.y += nx * force * 1.7 + ny * force * 0.35;
             }
-
-            // Draw bright laser tether to cursor
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(121, 192, 255, ${(force * 0.35).toFixed(3)})`;
-            ctx.lineWidth = 0.9;
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(mouse.x, mouse.y);
-            ctx.stroke();
           }
         }
 
@@ -404,16 +335,15 @@ export const ElectronCanvasBackground: React.FC = () => {
           p.vy = -Math.abs(p.vy);
         }
 
-        const rPulse = p.radius * (0.85 + 0.25 * Math.sin(p.phase));
+        // Steady radius (no flashing or throbbing size pulse)
         ctx.beginPath();
-        ctx.arc(p.x, p.y, rPulse, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.fill();
       }
 
-      // 3. Draw Constellation Filaments + Travelling Network Data Packets Along Filaments!
-      ctx.lineWidth = 0.75;
-      const packetProgress = (tickCount * 0.006) % 1;
+      // 3. Draw Subtle Monochrome Constellation Filaments (No Flashing White Dots)
+      ctx.lineWidth = 0.65;
 
       for (let i = 0; i < particles.length; i++) {
         const pi = particles[i];
@@ -426,23 +356,12 @@ export const ElectronCanvasBackground: React.FC = () => {
 
           const distSq = dx * dx + dy * dy;
           if (distSq < linkDistSq) {
-            const alpha = (1 - distSq / linkDistSq) * 0.24;
+            const alpha = (1 - distSq / linkDistSq) * 0.14;
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(121, 192, 255, ${alpha.toFixed(3)})`;
+            ctx.strokeStyle = `rgba(201, 209, 217, ${alpha.toFixed(3)})`;
             ctx.moveTo(pi.x, pi.y);
             ctx.lineTo(pj.x, pj.y);
             ctx.stroke();
-
-            // Every 11th connected pair renders a live glowing data packet travelling from pi -> pj
-            if ((i + j) % 11 === 0) {
-              const t = (packetProgress + ((i * 7) % 10) * 0.1) % 1;
-              const px = pi.x + (pj.x - pi.x) * t;
-              const py = pi.y + (pj.y - pi.y) * t;
-              ctx.beginPath();
-              ctx.arc(px, py, 1.8, 0, Math.PI * 2);
-              ctx.fillStyle = '#ffffff';
-              ctx.fill();
-            }
           }
         }
       }
