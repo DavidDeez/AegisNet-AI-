@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, HelpCircle } from 'lucide-react';
+import { GitBranch } from 'lucide-react';
 import { aegisApi } from '../api/client';
 import type { GlobalImportanceItem, NetworkEventRecord } from '../types/aegis';
 import { SeverityBadge, TriageBadge } from '../components/Badge';
@@ -76,69 +76,59 @@ export const ExplainabilityScreen: React.FC<Props> = ({
   );
 
   return (
-    <div className="space-y-6">
-      {/* Methodology Header */}
-      <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-1 max-w-3xl">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-sky-400" />
-            <h3 className="text-sm font-semibold text-slate-200">
-              Explainable AI (XAI) — Global & Local TreeSHAP Feature Attributions
-            </h3>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            {globalData?.methodology_note ||
-              'Additive decision-tree feature attribution showing how each network flow attribute shifts prediction probability from the prior baseline.'}
-          </p>
+    <div className="space-y-4">
+      {/* Compact Console Telemetry Strip (Replaces Textbook XAI Banner & Sparkles Icon) */}
+      <div className="bg-[#0d1117] border border-white/10 rounded px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+        <div className="flex items-center gap-2.5">
+          <GitBranch className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-slate-200 font-semibold">
+            TREESHAP ATTRIBUTION ENGINE // E[f(X)] + Σ φ_i = P(y|x)
+          </span>
         </div>
         {globalData && (
-          <div className="text-xs font-mono bg-[#161b22] border border-[#21262d] rounded px-3 py-2 text-slate-300">
-            <div>Backend: {globalData.explainer_backend}</div>
-            <div className="text-slate-500">Model: {globalData.model_version}</div>
+          <div className="text-[11px] text-slate-400 flex items-center gap-4">
+            <span>BACKEND: {globalData.explainer_backend}</span>
+            <span>ARTIFACT: {globalData.model_version}</span>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Global Feature Importance (5 cols) */}
-        <div className="lg:col-span-5 bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-200">
-              Global Feature Importance Ranking
-            </h3>
-            <p className="text-xs text-slate-400">
-              Mean |SHAP| magnitude across evaluation flows vs. Gini impurity reduction
-            </p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Global Feature Importance Ledger (5 cols) */}
+        <div className="lg:col-span-5 bg-[#0d1117] border border-white/10 rounded">
+          <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
+            <span className="text-xs font-semibold text-slate-200">
+              GLOBAL_IMPORTANCE // MEAN(|SHAP|) & GINI
+            </span>
+            <span className="text-[10px] text-slate-500">[24 FEATURES]</span>
           </div>
 
-          <div className="space-y-3 max-h-[580px] overflow-y-auto pr-1">
+          <div className="p-3 space-y-2 max-h-[640px] overflow-y-auto">
             {globalData?.global_importance.slice(0, 16).map((item) => {
               const barPct = (item.mean_abs_shap / maxGlobalShap) * 100;
               return (
                 <div
                   key={item.feature}
-                  className="p-2.5 rounded bg-[#161b22]/60 border border-[#21262d] space-y-1.5"
+                  className="p-2.5 rounded-[2px] bg-[#090c10] border border-white/[0.06] space-y-1.5"
                 >
                   <div className="flex items-center justify-between text-xs font-mono">
                     <span className="text-slate-200 font-medium">
-                      #{item.rank} {item.feature}
+                      {String(item.rank).padStart(2, '0')} // {item.feature}
                     </span>
-                    <span className="text-sky-300">
-                      |SHAP|: {item.mean_abs_shap.toFixed(4)} | Gini:{' '}
+                    <span className="text-slate-300 text-[11px]">
+                      |φ|: {item.mean_abs_shap.toFixed(4)} // G:{' '}
                       {item.gini_importance.toFixed(3)}
                     </span>
                   </div>
-                  <div className="h-1.5 w-full bg-[#090c10] rounded overflow-hidden">
+                  <div className="h-1 w-full bg-[#07080c] rounded-[1px] overflow-hidden">
                     <div
-                      className="h-full bg-sky-400"
+                      className="h-full bg-slate-300"
                       style={{ width: `${Math.min(100, barPct)}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-[11px] text-slate-400">
-                    <span>{item.description}</span>
-                    <span className="font-mono text-slate-500">
-                      Med: {item.train_median}
-                    </span>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                    <span className="truncate pr-2">{item.description}</span>
+                    <span className="shrink-0">MED: {item.train_median}</span>
                   </div>
                 </div>
               );
@@ -146,75 +136,70 @@ export const ExplainabilityScreen: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Local Single-Event Waterfall & Rationale (7 cols) */}
-        <div className="lg:col-span-7 bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#21262d] pb-3">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-200">
-                Local Flow Attribution Waterfall
-              </h3>
-              <p className="text-xs text-slate-400">
-                Exact additive decomposition: Base Value E[f(X)] + Σ SHAP_i = Predicted Class Probability
-              </p>
-            </div>
+        {/* Local Single-Event Waterfall & Playbook Synthesis (7 cols) */}
+        <div className="lg:col-span-7 bg-[#0d1117] border border-white/10 rounded">
+          <div className="px-4 py-3 border-b border-white/[0.07] flex flex-wrap items-center justify-between gap-3 font-mono">
+            <span className="text-xs font-semibold text-slate-200">
+              LOCAL_FLOW_WATERFALL // ADDITIVE_DECOMPOSITION
+            </span>
 
             <select
               value={activeUid || ''}
               onChange={(e) => onSelectEventUid(e.target.value)}
-              className="bg-[#090c10] border border-[#21262d] rounded px-3 py-1.5 text-xs font-mono text-slate-200"
+              className="bg-[#090c10] border border-white/10 rounded-[2px] px-2.5 py-1 text-xs font-mono text-slate-200"
             >
               {recentEvents.map((ev) => (
                 <option key={ev.event_uid} value={ev.event_uid}>
-                  {ev.event_uid} — {ev.predicted_label} ({ev.triage_category})
+                  {ev.event_uid} — {ev.predicted_label} [{ev.triage_category}]
                 </option>
               ))}
             </select>
           </div>
 
           {loadingLocal ? (
-            <div className="py-12 text-center text-xs font-mono text-slate-400">
-              Computing local TreeSHAP attributions...
+            <div className="py-16 text-center text-xs font-mono text-slate-500">
+              [COMPUTING_LOCAL_TREESHAP_PATH...]
             </div>
           ) : !localEvent || !localEvent.explanation ? (
-            <div className="py-12 text-center text-xs font-mono text-slate-500">
-              Select an analyzed flow event to inspect its local SHAP explanation.
+            <div className="py-16 text-center text-xs font-mono text-slate-500">
+              [SELECT_FLOW_RECORD_TO_INSPECT_SHAP]
             </div>
           ) : (
-            <div className="space-y-5">
-              {/* Summary Strip */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                <div className="p-3 rounded bg-[#161b22] border border-[#21262d]">
-                  <div className="text-[10px] text-slate-400">TARGET CLASS</div>
+            <div className="p-4 space-y-4">
+              {/* Unified 4-Cell Additive Decomposition Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/[0.07] bg-[#090c10] border border-white/10 rounded-[2px] text-xs font-mono">
+                <div className="p-2.5">
+                  <div className="text-[10px] text-slate-500">TARGET_CLASS</div>
                   <div className="text-slate-100 font-semibold mt-0.5 truncate">
                     {localEvent.explanation.target_class}
                   </div>
                 </div>
-                <div className="p-3 rounded bg-[#161b22] border border-[#21262d]">
-                  <div className="text-[10px] text-slate-400">PRIOR BASE VALUE</div>
+                <div className="p-2.5">
+                  <div className="text-[10px] text-slate-500">PRIOR E[f(X)]</div>
                   <div className="text-slate-300 mt-0.5">
                     {localEvent.explanation.base_value.toFixed(4)}
                   </div>
                 </div>
-                <div className="p-3 rounded bg-[#161b22] border border-[#21262d]">
-                  <div className="text-[10px] text-slate-400">FINAL CLASS PROB</div>
-                  <div className="text-sky-300 font-semibold mt-0.5">
+                <div className="p-2.5">
+                  <div className="text-[10px] text-slate-500">POSTERIOR P(y|x)</div>
+                  <div className="text-white font-semibold mt-0.5">
                     {(localEvent.supervised_confidence * 100).toFixed(2)}%
                   </div>
                 </div>
-                <div className="p-3 rounded bg-[#161b22] border border-[#21262d]">
-                  <div className="text-[10px] text-slate-400">ANOMALY / ENTROPY</div>
-                  <div className="text-purple-300 mt-0.5">
-                    p{localEvent.anomaly_percentile.toFixed(1)} | H=
+                <div className="p-2.5">
+                  <div className="text-[10px] text-slate-500">IF_PCTL // H(p)</div>
+                  <div className="text-amber-300 mt-0.5">
+                    p{localEvent.anomaly_percentile.toFixed(1)} //{' '}
                     {localEvent.predictive_entropy.toFixed(3)}
                   </div>
                 </div>
               </div>
 
-              {/* Analyst Narrative Rationale */}
-              <div className="p-3.5 rounded bg-sky-950/20 border border-sky-500/30 space-y-2.5">
+              {/* Decision Rationale & Incident Playbook Synthesis */}
+              <div className="p-3 rounded-[2px] bg-[#090c10] border border-white/10 space-y-2.5 font-mono">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-mono font-semibold text-sky-300">
-                    DECISION RATIONALE ({localEvent.event_uid})
+                  <span className="text-[11px] font-semibold text-slate-300">
+                    RATIONALE // {localEvent.event_uid}
                   </span>
                   <div className="flex items-center gap-2">
                     <TriageBadge category={localEvent.triage_category} />
@@ -223,23 +208,23 @@ export const ExplainabilityScreen: React.FC<Props> = ({
                       type="button"
                       onClick={handleGenerateBrief}
                       disabled={loadingBrief}
-                      className="px-2.5 py-1 text-[11px] font-mono font-medium rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 disabled:opacity-40 transition"
+                      className="px-2.5 py-1 text-[10px] font-medium rounded-[2px] bg-white/[0.08] text-slate-100 border border-white/15 hover:bg-white/[0.14] disabled:opacity-40 transition"
                     >
                       {loadingBrief
-                        ? 'Synthesizing SOC Brief...'
-                        : 'Generate Fireworks AI SOC Brief'}
+                        ? 'SYNTHESIZING...'
+                        : 'SYNTHESIZE // INCIDENT_PLAYBOOK'}
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-slate-200 leading-relaxed">
+                <p className="text-xs text-slate-300 leading-relaxed">
                   {localEvent.rationale_text}
                 </p>
 
                 {aiBrief && (
-                  <div className="mt-3 p-3.5 rounded bg-[#090c10] border border-purple-500/35 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-purple-300 border-b border-[#21262d] pb-1.5">
+                  <div className="mt-3 p-3 rounded-[2px] bg-[#07080c] border border-white/15 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 border-b border-white/10 pb-1.5">
                       <span>
-                        SOC INCIDENT BRIEF ({aiBrief.provider.toUpperCase()} — {aiBrief.model})
+                        INCIDENT_PLAYBOOK // ENGINE: {aiBrief.model}
                       </span>
                       <span>{aiBrief.latency_ms} ms</span>
                     </div>
@@ -250,11 +235,11 @@ export const ExplainabilityScreen: React.FC<Props> = ({
                 )}
               </div>
 
-              {/* Bidirectional SHAP Bar Chart */}
-              <div className="space-y-2.5">
-                <div className="flex justify-between text-xs font-mono text-slate-400">
-                  <span>ATTRIBUTE & OBSERVED VALUE (VS BASELINE MEDIAN)</span>
-                  <span>SHAP CONTRIBUTION (Δ PROBABILITY)</span>
+              {/* Bidirectional SHAP Attribution Table */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                  <span>FEATURE_VECTOR (OBSERVED VS. TRAINING_MEDIAN)</span>
+                  <span>Δ_PROBABILITY (φ_i)</span>
                 </div>
 
                 {contributors.map((c) => {
@@ -266,17 +251,20 @@ export const ExplainabilityScreen: React.FC<Props> = ({
                   return (
                     <div
                       key={c.feature}
-                      className="p-2.5 rounded bg-[#161b22]/60 border border-[#21262d] space-y-1.5"
+                      className="p-2.5 rounded-[2px] bg-[#090c10] border border-white/[0.06] space-y-1"
                     >
                       <div className="flex items-center justify-between text-xs font-mono">
                         <div>
-                          <span className="text-slate-200 font-semibold">
+                          <span className="text-slate-100 font-medium">
                             {c.feature}
                           </span>{' '}
-                          <span className="text-sky-300">= {c.feature_value}</span>{' '}
-                          <span className="text-slate-500">
-                            (median: {c.train_median}, z={c.robust_z_score >= 0 ? '+' : ''}
-                            {c.robust_z_score})
+                          <span className="text-slate-300">
+                            = {c.feature_value}
+                          </span>{' '}
+                          <span className="text-slate-500 text-[11px]">
+                            [med: {c.train_median}, IQR_z:{' '}
+                            {c.robust_z_score >= 0 ? '+' : ''}
+                            {c.robust_z_score}]
                           </span>
                         </div>
                         <span
@@ -288,16 +276,13 @@ export const ExplainabilityScreen: React.FC<Props> = ({
                           {c.shap_value.toFixed(4)}
                         </span>
                       </div>
-                      <div className="h-2 w-full bg-[#090c10] rounded overflow-hidden flex">
+                      <div className="h-1.5 w-full bg-[#07080c] rounded-[1px] overflow-hidden flex">
                         <div
                           className={`h-full ${
                             isPos ? 'bg-red-500/80' : 'bg-emerald-500/80'
                           }`}
                           style={{ width: `${widthPct}%` }}
                         />
-                      </div>
-                      <div className="text-[11px] text-slate-400">
-                        {c.description}
                       </div>
                     </div>
                   );

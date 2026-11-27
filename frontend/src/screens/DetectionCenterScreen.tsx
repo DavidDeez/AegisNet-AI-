@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Upload,
-  Play,
-  Sliders,
-  CheckCircle2,
-  AlertCircle,
-  FileSpreadsheet,
-} from 'lucide-react';
+import { Upload, Play, Sliders, AlertCircle, FileSpreadsheet } from 'lucide-react';
 import { aegisApi } from '../api/client';
 import type { DetectionBatchResult } from '../types/aegis';
 import { SeverityBadge, TriageBadge } from '../components/Badge';
@@ -21,9 +14,8 @@ const PRESET_FLOW_PROFILES: Record<
   { label: string; description: string; payload: Record<string, any> }
 > = {
   dos_hulk: {
-    label: 'DoS Hulk HTTP Flood Pattern',
-    description:
-      'High packet rate HTTP flood to port 80 with elevated backward response payload.',
+    label: 'DoS Hulk HTTP Flood',
+    description: 'High packet-rate HTTP GET flood on TCP/80.',
     payload: {
       src_ip: '172.16.0.108',
       dst_ip: '192.168.10.50',
@@ -56,8 +48,7 @@ const PRESET_FLOW_PROFILES: Record<
   },
   port_scan: {
     label: 'TCP SYN PortScan Probe',
-    description:
-      'Ultra-short 1-packet probe with minimal payload and SYN/RST flags.',
+    description: 'Single-packet SYN/RST port probe with 6-byte payload.',
     payload: {
       src_ip: '172.16.0.135',
       dst_ip: '192.168.10.51',
@@ -89,9 +80,8 @@ const PRESET_FLOW_PROFILES: Record<
     },
   },
   unseen_botnet_c2: {
-    label: 'Unseen C2 Beacon Pattern (Held-Out Anomaly Test)',
-    description:
-      'Long-duration periodic flow on port 8443 with tiny window size and high PSH count (excluded from supervised training).',
+    label: 'Unseen C2 Beacon (Open-Set Holdout)',
+    description: 'Periodic C2 beacon on TCP/8443 excluded from RF training.',
     payload: {
       src_ip: '192.168.10.114',
       dst_ip: '198.51.100.44',
@@ -123,9 +113,8 @@ const PRESET_FLOW_PROFILES: Record<
     },
   },
   mitm_relay: {
-    label: 'MITM ARP-Relay & TLS Downgrade Interception',
-    description:
-      'Man-in-the-Middle relay signature: high double-hop IAT jitter, resized TCP window (128B), and elevated RST/PSH flags from TLS interception.',
+    label: 'MITM ARP-Relay & TLS Downgrade',
+    description: 'Double-hop IAT jitter, 128B window resize, and RST/PSH spikes.',
     payload: {
       src_ip: '192.168.1.44',
       dst_ip: '10.0.0.15',
@@ -157,9 +146,8 @@ const PRESET_FLOW_PROFILES: Record<
     },
   },
   benign_https: {
-    label: 'Standard Benign HTTPS Session',
-    description:
-      'Normal TLS 1.3 web transaction on port 443 within baseline IAT and window bounds.',
+    label: 'Benign TLS 1.3 Session',
+    description: 'Nominal HTTPS transaction on TCP/443.',
     payload: {
       src_ip: '192.168.10.25',
       dst_ip: '172.16.0.12',
@@ -259,7 +247,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
     setError(null);
     try {
       const res = await aegisApi.analyzeFlows(
-        `interactive_inspector_${selectedPreset}`,
+        `vector_probe_${selectedPreset}`,
         [customFlow]
       );
       setResult(res);
@@ -272,288 +260,305 @@ export const DetectionCenterScreen: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {error && (
-        <div className="bg-red-950/50 border border-red-500/40 rounded-lg p-4 flex items-center gap-3 text-xs text-red-200">
+        <div className="bg-red-950/50 border border-red-500/40 rounded-[3px] p-3 flex items-center gap-2.5 text-xs font-mono text-red-200">
           <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-          <span>{error}</span>
+          <span>[INGEST_FAULT] {error}</span>
         </div>
       )}
 
-      {/* Three Ingestion Modes */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 1. Upload CSV Network Flow Dataset */}
+      {/* Three Clinical Ingestion Workbenches (No 1/2/3 Tutorial Prose) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* CSV Capture Ingest */}
         <form
           onSubmit={handleUploadCsv}
-          className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 flex flex-col justify-between space-y-4"
+          className="bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between"
         >
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-200">
-                1. CSV Flow Dataset Upload
-              </h3>
-              <Upload className="w-4 h-4 text-sky-400" />
-            </div>
-            <p className="text-xs text-slate-400">
-              Upload CIC-IDS2017 or canonical network flow `.csv` files (up to 50 MB). Automatically sanitizes `Infinity`/`NaN` cells, validates schema, and removes duplicates.
-            </p>
-
-            <label className="block border border-dashed border-[#30363d] hover:border-sky-500/50 rounded-lg p-4 text-center cursor-pointer bg-[#090c10] transition">
-              <FileSpreadsheet className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
-              <span className="text-xs text-slate-300 font-mono block truncate">
-                {selectedFile
-                  ? `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} KB)`
-                  : 'Select .csv network flow file'}
+          <div>
+            <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
+              <span className="text-xs font-semibold text-slate-200">
+                INGEST // PCAP_FLOW_CSV
               </span>
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                onChange={(e) =>
-                  setSelectedFile(e.target.files ? e.target.files[0] : null)
-                }
-                className="hidden"
-              />
-            </label>
+              <Upload className="w-3.5 h-3.5 text-slate-400" />
+            </div>
 
-            <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={deduplicate}
-                onChange={(e) => setDeduplicate(e.target.checked)}
-                className="rounded border-slate-700 bg-slate-900"
-              />
-              Deduplicate identical flow records before inference
-            </label>
+            <div className="p-4 space-y-3">
+              <label className="block border border-dashed border-white/15 hover:border-white/35 rounded-[3px] p-5 text-center cursor-pointer bg-[#090c10] transition">
+                <FileSpreadsheet className="w-5 h-5 text-slate-400 mx-auto mb-1.5" />
+                <span className="text-xs text-slate-200 font-mono block truncate">
+                  {selectedFile
+                    ? `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} KB)`
+                    : 'SELECT CICFLOWMETER / NETFLOW .CSV'}
+                </span>
+                <span className="text-[10px] font-mono text-slate-500 block mt-1">
+                  MAX 50 MB // AUTO-SANITIZES NaN & INF
+                </span>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(e) =>
+                    setSelectedFile(e.target.files ? e.target.files[0] : null)
+                  }
+                  className="hidden"
+                />
+              </label>
+
+              <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={deduplicate}
+                  onChange={(e) => setDeduplicate(e.target.checked)}
+                  className="rounded-[2px] border-slate-700 bg-slate-900"
+                />
+                DROP DUPLICATE FLOW VECTORS
+              </label>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={!selectedFile || busy}
-            className="w-full py-2 px-4 text-xs font-mono font-medium rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500/30 disabled:opacity-40 transition"
-          >
-            {busy ? 'Validating & Scoring...' : 'Validate & Analyze CSV'}
-          </button>
+          <div className="p-4 pt-0">
+            <button
+              type="submit"
+              disabled={!selectedFile || busy}
+              className="w-full py-2 px-4 text-xs font-mono font-medium rounded-[3px] bg-white/[0.08] text-white border border-white/15 hover:bg-white/[0.14] disabled:opacity-40 transition"
+            >
+              {busy ? 'RUNNING PIPELINE...' : 'EXEC // VALIDATE & SCORE CSV'}
+            </button>
+          </div>
         </form>
 
-        {/* 2. Reproducible CIC-IDS2017 Benchmark Slice */}
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 flex flex-col justify-between space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-200">
-                2. CIC-IDS2017 Benchmark Batch
-              </h3>
-              <Play className="w-4 h-4 text-emerald-400" />
-            </div>
-            <p className="text-xs text-slate-400">
-              Evaluate a reproducible slice of CIC-IDS2017-schema flows containing benign traffic, known attacks (`DoS Hulk`, `PortScan`, `DDoS`, `BruteForce`), and held-out unseen families (`Botnet`, `WebAttack`).
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <label className="text-slate-400 block mb-1 font-mono">
-                  BATCH FLOW COUNT
-                </label>
-                <input
-                  type="number"
-                  min={10}
-                  max={500}
-                  value={sliceSize}
-                  onChange={(e) => setSliceSize(Number(e.target.value))}
-                  className="w-full bg-[#090c10] border border-[#21262d] rounded px-2.5 py-1.5 font-mono text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-slate-400 block mb-1 font-mono">
-                  RANDOM SEED
-                </label>
-                <input
-                  type="number"
-                  value={sliceSeed}
-                  onChange={(e) => setSliceSeed(Number(e.target.value))}
-                  className="w-full bg-[#090c10] border border-[#21262d] rounded px-2.5 py-1.5 font-mono text-slate-200"
-                />
-              </div>
+        {/* Holdout Benchmark Slice */}
+        <div className="bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between">
+          <div>
+            <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
+              <span className="text-xs font-semibold text-slate-200">
+                REPLAY // CICIDS2017_SLICE
+              </span>
+              <Play className="w-3.5 h-3.5 text-slate-400" />
             </div>
 
-            <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={includeHeldOut}
-                onChange={(e) => setIncludeHeldOut(e.target.checked)}
-                className="rounded border-slate-700 bg-slate-900"
-              />
-              Include held-out unseen attack families (`Botnet`, `WebAttack`)
-            </label>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">
+                    FLOW_COUNT
+                  </label>
+                  <input
+                    type="number"
+                    min={10}
+                    max={500}
+                    value={sliceSize}
+                    onChange={(e) => setSliceSize(Number(e.target.value))}
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2.5 py-1.5 text-slate-100"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">
+                    PRNG_SEED
+                  </label>
+                  <input
+                    type="number"
+                    value={sliceSeed}
+                    onChange={(e) => setSliceSeed(Number(e.target.value))}
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2.5 py-1.5 text-slate-100"
+                  />
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={includeHeldOut}
+                  onChange={(e) => setIncludeHeldOut(e.target.checked)}
+                  className="rounded-[2px] border-slate-700 bg-slate-900"
+                />
+                INJECT HELD-OUT FAMILIES (BOTNET, WEBATTACK)
+              </label>
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleRunBenchmarkSlice}
-            disabled={busy}
-            className="w-full py-2 px-4 text-xs font-mono font-medium rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 disabled:opacity-40 transition"
-          >
-            {busy ? 'Scoring Batch...' : `Analyze ${sliceSize} Benchmark Flows`}
-          </button>
+          <div className="p-4 pt-0">
+            <button
+              type="button"
+              onClick={handleRunBenchmarkSlice}
+              disabled={busy}
+              className="w-full py-2 px-4 text-xs font-mono font-medium rounded-[3px] bg-white/[0.08] text-white border border-white/15 hover:bg-white/[0.14] disabled:opacity-40 transition"
+            >
+              {busy
+                ? 'SCORING BATCH...'
+                : `EXEC // SCORE ${sliceSize} BENCHMARK FLOWS`}
+            </button>
+          </div>
         </div>
 
-        {/* 3. Interactive Single-Flow Telemetry Inspector */}
+        {/* Single-Flow Vector Probe */}
         <form
           onSubmit={handleAnalyzeSingleFlow}
-          className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 flex flex-col justify-between space-y-4"
+          className="bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between"
         >
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-200">
-                3. Structured Flow Inspector
-              </h3>
-              <Sliders className="w-4 h-4 text-purple-400" />
+          <div>
+            <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
+              <span className="text-xs font-semibold text-slate-200">
+                PROBE // FLOW_VECTOR_SYNTHESIZER
+              </span>
+              <Sliders className="w-3.5 h-3.5 text-slate-400" />
             </div>
 
-            <div>
-              <label className="text-[11px] font-mono text-slate-400 block mb-1">
-                LOAD BASELINE TEMPLATE
-              </label>
-              <select
-                value={selectedPreset}
-                onChange={(e) => handlePresetChange(e.target.value)}
-                className="w-full bg-[#090c10] border border-[#21262d] rounded px-2.5 py-1.5 text-xs font-mono text-slate-200"
-              >
-                {Object.entries(PRESET_FLOW_PROFILES).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-[11px] text-slate-500 mt-1">
-                {PRESET_FLOW_PROFILES[selectedPreset]?.description}
-              </p>
-            </div>
+            <div className="p-4 space-y-3">
+              <div>
+                <label className="text-[10px] font-mono text-slate-400 block mb-1">
+                  VECTOR_PRESET
+                </label>
+                <select
+                  value={selectedPreset}
+                  onChange={(e) => handlePresetChange(e.target.value)}
+                  className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2.5 py-1.5 text-xs font-mono text-slate-100"
+                >
+                  {Object.entries(PRESET_FLOW_PROFILES).map(([k, v]) => (
+                    <option key={k} value={k}>
+                      {v.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-              <div>
-                <label className="text-[10px] text-slate-400 block">DST PORT</label>
-                <input
-                  type="number"
-                  value={customFlow.destination_port}
-                  onChange={(e) =>
-                    setCustomFlow({
-                      ...customFlow,
-                      destination_port: Number(e.target.value),
-                    })
-                  }
-                  className="w-full bg-[#090c10] border border-[#21262d] rounded px-2 py-1 text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-400 block">DURATION (μs)</label>
-                <input
-                  type="number"
-                  value={customFlow.flow_duration}
-                  onChange={(e) =>
-                    setCustomFlow({
-                      ...customFlow,
-                      flow_duration: Number(e.target.value),
-                    })
-                  }
-                  className="w-full bg-[#090c10] border border-[#21262d] rounded px-2 py-1 text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-400 block">BYTES/S</label>
-                <input
-                  type="number"
-                  value={customFlow.flow_bytes_s}
-                  onChange={(e) =>
-                    setCustomFlow({
-                      ...customFlow,
-                      flow_bytes_s: Number(e.target.value),
-                    })
-                  }
-                  className="w-full bg-[#090c10] border border-[#21262d] rounded px-2 py-1 text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-400 block">FWD PKTS</label>
-                <input
-                  type="number"
-                  value={customFlow.total_fwd_packets}
-                  onChange={(e) =>
-                    setCustomFlow({
-                      ...customFlow,
-                      total_fwd_packets: Number(e.target.value),
-                    })
-                  }
-                  className="w-full bg-[#090c10] border border-[#21262d] rounded px-2 py-1 text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-400 block">SYN FLAGS</label>
-                <input
-                  type="number"
-                  value={customFlow.syn_flag_count}
-                  onChange={(e) =>
-                    setCustomFlow({
-                      ...customFlow,
-                      syn_flag_count: Number(e.target.value),
-                    })
-                  }
-                  className="w-full bg-[#090c10] border border-[#21262d] rounded px-2 py-1 text-slate-200"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-400 block">INIT WIN</label>
-                <input
-                  type="number"
-                  value={customFlow.init_win_bytes_forward}
-                  onChange={(e) =>
-                    setCustomFlow({
-                      ...customFlow,
-                      init_win_bytes_forward: Number(e.target.value),
-                    })
-                  }
-                  className="w-full bg-[#090c10] border border-[#21262d] rounded px-2 py-1 text-slate-200"
-                />
+              <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+                <div>
+                  <label className="text-[10px] text-slate-500 block">
+                    DST_PORT
+                  </label>
+                  <input
+                    type="number"
+                    value={customFlow.destination_port}
+                    onChange={(e) =>
+                      setCustomFlow({
+                        ...customFlow,
+                        destination_port: Number(e.target.value),
+                      })
+                    }
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 block">
+                    DUR_US
+                  </label>
+                  <input
+                    type="number"
+                    value={customFlow.flow_duration}
+                    onChange={(e) =>
+                      setCustomFlow({
+                        ...customFlow,
+                        flow_duration: Number(e.target.value),
+                      })
+                    }
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 block">
+                    BYTES_S
+                  </label>
+                  <input
+                    type="number"
+                    value={customFlow.flow_bytes_s}
+                    onChange={(e) =>
+                      setCustomFlow({
+                        ...customFlow,
+                        flow_bytes_s: Number(e.target.value),
+                      })
+                    }
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 block">
+                    FWD_PKTS
+                  </label>
+                  <input
+                    type="number"
+                    value={customFlow.total_fwd_packets}
+                    onChange={(e) =>
+                      setCustomFlow({
+                        ...customFlow,
+                        total_fwd_packets: Number(e.target.value),
+                      })
+                    }
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 block">
+                    SYN_CNT
+                  </label>
+                  <input
+                    type="number"
+                    value={customFlow.syn_flag_count}
+                    onChange={(e) =>
+                      setCustomFlow({
+                        ...customFlow,
+                        syn_flag_count: Number(e.target.value),
+                      })
+                    }
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-500 block">
+                    INIT_WIN
+                  </label>
+                  <input
+                    type="number"
+                    value={customFlow.init_win_bytes_forward}
+                    onChange={(e) =>
+                      setCustomFlow({
+                        ...customFlow,
+                        init_win_bytes_forward: Number(e.target.value),
+                      })
+                    }
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full py-2 px-4 text-xs font-mono font-medium rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 disabled:opacity-40 transition"
-          >
-            {busy ? 'Scoring Flow...' : 'Score & Explain Single Flow'}
-          </button>
+          <div className="p-4 pt-0">
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full py-2 px-4 text-xs font-mono font-medium rounded-[3px] bg-white/[0.08] text-white border border-white/15 hover:bg-white/[0.14] disabled:opacity-40 transition"
+            >
+              {busy ? 'SCORING VECTOR...' : 'EXEC // SCORE & EXPLAIN VECTOR'}
+            </button>
+          </div>
         </form>
       </div>
 
-      {/* Validation, Uncertainty & Scoring Results */}
+      {/* Batch Execution Output Ledger */}
       {result && (
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#21262d] pb-4">
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              <div>
-                <h3 className="text-sm font-semibold text-slate-200">
-                  Batch Analysis Complete — {result.source_name} ({result.batch_id})
-                </h3>
-                <p className="text-xs text-slate-400 font-mono">
-                  Model: {result.model_version} | Latency: {result.latency_ms} ms | Max Feature Drift PSI:{' '}
-                  {result.drift_report.psi_max.toFixed(4)}
-                </p>
+        <div className="bg-[#0d1117] border border-white/10 rounded">
+          <div className="px-4 py-3 border-b border-white/[0.07] flex flex-wrap items-center justify-between gap-4 font-mono">
+            <div>
+              <div className="text-xs font-semibold text-white">
+                BATCH_OUTPUT // {result.source_name} [{result.batch_id}]
+              </div>
+              <div className="text-[10px] text-slate-400 mt-0.5">
+                ARTIFACT: {result.model_version} // LATENCY: {result.latency_ms}{' '}
+                ms // MAX_DRIFT_PSI: {result.drift_report.psi_max.toFixed(4)}
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 text-xs font-mono">
-              <span className="px-2.5 py-1 rounded bg-[#161b22] border border-[#21262d] text-slate-300">
-                Retained: {result.validation_report.valid_rows_retained}/
+            <div className="flex flex-wrap gap-2 text-[11px]">
+              <span className="px-2 py-0.5 rounded-[2px] bg-[#090c10] border border-white/10 text-slate-300">
+                RETAINED: {result.validation_report.valid_rows_retained}/
                 {result.validation_report.total_rows_received}
               </span>
-              <span className="px-2.5 py-1 rounded bg-[#161b22] border border-[#21262d] text-slate-300">
-                Duplicates Removed: {result.validation_report.duplicate_rows_removed}
+              <span className="px-2 py-0.5 rounded-[2px] bg-[#090c10] border border-white/10 text-slate-300">
+                DEDUPED: {result.validation_report.duplicate_rows_removed}
               </span>
-              <span className="px-2.5 py-1 rounded bg-[#161b22] border border-[#21262d] text-slate-300">
-                Inf/NaN Sanitized:{' '}
+              <span className="px-2 py-0.5 rounded-[2px] bg-[#090c10] border border-white/10 text-slate-300">
+                IMPUTED_CELLS:{' '}
                 {result.validation_report.infinite_value_cells +
                   result.validation_report.missing_value_cells}
               </span>
@@ -561,65 +566,65 @@ export const DetectionCenterScreen: React.FC<Props> = ({
           </div>
 
           {result.validation_report.warnings.length > 0 && (
-            <div className="bg-amber-950/30 border border-amber-500/30 rounded p-3 text-xs text-amber-200 font-mono space-y-1">
-              <div className="font-semibold">DATA VALIDATION SANITIZATION LOG:</div>
+            <div className="mx-4 mt-3 bg-[#090c10] border border-white/10 border-l-2 border-l-amber-400 p-2.5 text-[11px] text-slate-300 font-mono space-y-0.5">
               {result.validation_report.warnings.map((w, idx) => (
-                <div key={idx}>• {w}</div>
+                <div key={idx}>[SANITIZER] {w}</div>
               ))}
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto mt-2">
+            <table className="w-full text-left border-collapse text-xs font-mono">
               <thead>
-                <tr className="border-b border-[#21262d] text-slate-400 font-mono">
-                  <th className="py-2 pr-3">EVENT UID</th>
-                  <th className="py-2 px-3">FLOW ENDPOINTS</th>
-                  <th className="py-2 px-3">TRIAGE OUTCOME</th>
-                  <th className="py-2 px-3">PREDICTED LABEL</th>
-                  <th className="py-2 px-3">GROUND TRUTH</th>
-                  <th className="py-2 px-3">SEVERITY</th>
-                  <th className="py-2 px-3 text-right">CONFIDENCE</th>
+                <tr className="border-b border-white/[0.07] text-[10px] text-slate-400 bg-[#090c10]/60">
+                  <th className="py-2 px-4">EVENT UID</th>
+                  <th className="py-2 px-3">ENDPOINTS</th>
+                  <th className="py-2 px-3">TRIAGE STATE</th>
+                  <th className="py-2 px-3">CLASSIFICATION</th>
+                  <th className="py-2 px-3">TRUTH_LABEL</th>
+                  <th className="py-2 px-3">SEV</th>
+                  <th className="py-2 px-3 text-right">P(y|x)</th>
                   <th className="py-2 px-3 text-right">ENTROPY</th>
-                  <th className="py-2 px-3 text-right">IF ANOMALY</th>
-                  <th className="py-2 pl-3">RATIONALE PREVIEW</th>
+                  <th className="py-2 px-3 text-right">IF_SCORE</th>
+                  <th className="py-2 px-4">ATTRIBUTION SUMMARY</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#161b22]">
+              <tbody className="divide-y divide-white/[0.05]">
                 {result.events.slice(0, 40).map((ev) => (
                   <tr
                     key={ev.event_uid}
                     onClick={() => onInspectEvent(ev.event_uid)}
-                    className="hover:bg-[#161b22] cursor-pointer"
+                    className="hover:bg-white/[0.04] cursor-pointer"
                   >
-                    <td className="py-2 pr-3 font-mono text-sky-400">
+                    <td className="py-2 px-4 text-slate-200 font-medium">
                       {ev.event_uid}
                     </td>
-                    <td className="py-2 px-3 font-mono text-slate-300">
+                    <td className="py-2 px-3 text-slate-300">
                       {ev.src_ip} → {ev.dst_ip}:{ev.dst_port}
                     </td>
                     <td className="py-2 px-3">
                       <TriageBadge category={ev.triage_category} />
                     </td>
-                    <td className="py-2 px-3 font-mono text-slate-200">
+                    <td className="py-2 px-3 text-slate-100">
                       {ev.predicted_label}
                     </td>
-                    <td className="py-2 px-3 font-mono text-slate-400">
+                    <td className="py-2 px-3 text-slate-400">
                       {ev.ground_truth_label || '—'}
                     </td>
                     <td className="py-2 px-3">
                       <SeverityBadge severity={ev.severity} />
                     </td>
-                    <td className="py-2 px-3 text-right font-mono text-sky-300">
+                    <td className="py-2 px-3 text-right text-slate-200">
                       {(ev.supervised_confidence * 100).toFixed(1)}%
                     </td>
-                    <td className="py-2 px-3 text-right font-mono text-amber-300">
+                    <td className="py-2 px-3 text-right text-slate-300">
                       {ev.predictive_entropy.toFixed(3)}
                     </td>
-                    <td className="py-2 px-3 text-right font-mono text-purple-300">
-                      {ev.anomaly_score.toFixed(3)} (p{ev.anomaly_percentile.toFixed(1)})
+                    <td className="py-2 px-3 text-right text-amber-300/90">
+                      {ev.anomaly_score.toFixed(3)} (p
+                      {ev.anomaly_percentile.toFixed(1)})
                     </td>
-                    <td className="py-2 pl-3 text-slate-400 max-w-xs truncate">
+                    <td className="py-2 px-4 text-slate-400 max-w-xs truncate">
                       {ev.rationale_text}
                     </td>
                   </tr>
