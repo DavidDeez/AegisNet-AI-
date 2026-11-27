@@ -216,10 +216,10 @@ export const ElectronCanvasBackground: React.FC = () => {
       'rgba(240, 246, 252, 0.85)', // Bright white star
     ];
 
-    // Multiplied star/electron density (2.4x denser than standard 10000 divisor)
+    // Balanced high-density starfield (~140-175 stars on 1080p) for locked 60fps performance
     const particleCount = Math.min(
-      340,
-      Math.max(140, Math.floor((canvas.width * canvas.height) / 4200))
+      175,
+      Math.max(85, Math.floor((canvas.width * canvas.height) / 11500))
     );
 
     const particles: StarElectron[] = Array.from(
@@ -227,12 +227,16 @@ export const ElectronCanvasBackground: React.FC = () => {
       (_, i) => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 1.6,
-        vy: (Math.random() - 0.5) * 1.6,
-        radius: Math.random() * 1.7 + 0.6,
+        vx: (Math.random() - 0.5) * 1.45,
+        vy: (Math.random() - 0.5) * 1.45,
+        radius: Math.random() * 1.6 + 0.6,
         color: starPalette[i % starPalette.length],
       })
     );
+
+    const mouseRadiusSq = mouse.radius * mouse.radius;
+    const linkDist = 125;
+    const linkDistSq = linkDist * linkDist;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -242,17 +246,16 @@ export const ElectronCanvasBackground: React.FC = () => {
         p.x += p.vx;
         p.y += p.vy;
 
-        // GradeGuide Mouse Repulsion Force Field
+        // Fast squared-distance mouse repulsion check
         if (mouse.x != null && mouse.y != null) {
           const dx = mouse.x - p.x;
           const dy = mouse.y - p.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance > 0.1 && distance < mouse.radius) {
-            const forceDirectionX = dx / distance;
-            const forceDirectionY = dy / distance;
+          const distSq = dx * dx + dy * dy;
+          if (distSq > 0.1 && distSq < mouseRadiusSq) {
+            const distance = Math.sqrt(distSq);
             const force = (mouse.radius - distance) / mouse.radius;
-            p.x -= forceDirectionX * force * 5;
-            p.y -= forceDirectionY * force * 5;
+            p.x -= (dx / distance) * force * 4.5;
+            p.y -= (dy / distance) * force * 4.5;
           }
         }
 
@@ -265,24 +268,22 @@ export const ElectronCanvasBackground: React.FC = () => {
         ctx.fill();
       }
 
-      // Draw GradeGuide Constellation Filaments
-      const linkDist = 128;
+      // Draw GradeGuide Constellation Filaments using fast squared-distance pre-filter
+      ctx.lineWidth = 0.75;
       for (let i = 0; i < particles.length; i++) {
         const pi = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
           const pj = particles[j];
           const dx = pi.x - pj.x;
+          if (dx > linkDist || dx < -linkDist) continue;
           const dy = pi.y - pj.y;
-          if (Math.abs(dx) > linkDist || Math.abs(dy) > linkDist) continue;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (dy > linkDist || dy < -linkDist) continue;
 
-          if (distance < linkDist) {
+          const distSq = dx * dx + dy * dy;
+          if (distSq < linkDistSq) {
+            const alpha = (1 - distSq / linkDistSq) * 0.18;
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(201, 209, 217, ${(
-              0.22 -
-              (distance / linkDist) * 0.22
-            ).toFixed(3)})`;
-            ctx.lineWidth = 0.8;
+            ctx.strokeStyle = `rgba(201, 209, 217, ${alpha.toFixed(3)})`;
             ctx.moveTo(pi.x, pi.y);
             ctx.lineTo(pj.x, pj.y);
             ctx.stroke();
@@ -596,34 +597,31 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
 };
 
 /**
- * 7. Global Cursor-Tracking Specular Glass Spotlight & Subtle 3D Tilt Engine
+ * 7. Zero-Thrash Cursor Spotlight Engine (Updates ONLY the single card under the pointer!)
  */
 export const useGlobalGlassCursorEngine = () => {
   useEffect(() => {
     let rafId = 0;
+    let activeCard: HTMLElement | null = null;
 
     const handlePointerMove = (e: MouseEvent) => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
-        document.documentElement.style.setProperty(
-          '--cursor-x',
-          `${e.clientX}px`
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+        const card = target.closest<HTMLElement>(
+          'main .bg-\\[\\#0d1117\\], .spotlight-wrapper'
         );
-        document.documentElement.style.setProperty(
-          '--cursor-y',
-          `${e.clientY}px`
-        );
-
-        const cards = document.querySelectorAll<HTMLElement>(
-          '.bg-\\[\\#0d1117\\], .spotlight-wrapper'
-        );
-        cards.forEach((card) => {
+        if (activeCard && activeCard !== card) {
+          activeCard.style.setProperty('--mouse-x', '-999px');
+          activeCard.style.setProperty('--mouse-y', '-999px');
+        }
+        if (card) {
           const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          card.style.setProperty('--mouse-x', `${x}px`);
-          card.style.setProperty('--mouse-y', `${y}px`);
-        });
+          card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+          card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+          activeCard = card;
+        }
       });
     };
 

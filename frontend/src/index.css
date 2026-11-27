@@ -5,7 +5,7 @@
 :root {
   --bg-dark: #0d1117;
   --bg-main: #0d1117;
-  --panel-bg: rgba(22, 27, 34, 0.78);
+  --panel-bg: rgba(22, 27, 34, 0.86);
   --panel-border: #30363d;
   --primary: #f0f6fc;
   --primary-hover: #c9d1d9;
@@ -17,8 +17,6 @@
   --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-heading: 'Space Grotesk', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', Courier, monospace;
-  --cursor-x: 50vw;
-  --cursor-y: 50vh;
 }
 
 @layer base {
@@ -60,11 +58,11 @@
   bottom: 28px;
   right: 16px;
   width: 420px;
-  height: 28vh;
+  height: 26vh;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.22;
+  opacity: 0.2;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   line-height: 1.5;
@@ -132,37 +130,35 @@
   }
 }
 
-/* GradeGuide Spotlight Card & Glass Panel System */
+/* GradeGuide Spotlight Card & Panel System (Zero GPU Blur Lag over 60fps Canvas) */
 .bg-\[\#0d1117\],
 .spotlight-wrapper {
   position: relative;
   background:
     radial-gradient(
-      400px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+      380px circle at var(--mouse-x, -999px) var(--mouse-y, -999px),
       rgba(210, 168, 255, 0.13),
       transparent 40%
     ),
     var(--panel-bg) !important;
-  backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
   border: 1px solid var(--panel-border) !important;
   border-radius: 6px;
   transition:
-    border-color 0.28s ease,
-    transform 0.28s ease,
-    box-shadow 0.28s ease;
+    border-color 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 main .bg-\[\#0d1117\]:hover,
 .spotlight-wrapper:hover {
   border-color: rgba(121, 192, 255, 0.5) !important;
-  transform: translateY(-3px);
-  box-shadow: 0 0 22px rgba(121, 192, 255, 0.14);
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px rgba(121, 192, 255, 0.13);
 }
 
 .interactive-ledger-cell {
   position: relative;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.18s ease;
 }
 
 .interactive-ledger-cell:hover {
@@ -177,7 +173,7 @@ main .bg-\[\#0d1117\]:hover,
   width: 0%;
   height: 2px;
   background: linear-gradient(90deg, #79c0ff, #d2a8ff);
-  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .interactive-ledger-cell:hover::after {
@@ -190,30 +186,28 @@ main .bg-\[\#0d1117\]:hover,
 .bg-\[\#161b22\]\/70,
 .bg-\[\#161b22\]\/80,
 .bg-\[\#161b22\]\/90 {
-  background: rgba(33, 38, 45, 0.72) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(33, 38, 45, 0.82) !important;
   border-color: var(--panel-border) !important;
 }
 
 .bg-\[\#090c10\] {
-  background-color: rgba(13, 17, 23, 0.85) !important;
+  background-color: rgba(13, 17, 23, 0.9) !important;
 }
 
 .glass-modal {
   background: rgba(22, 27, 34, 0.96);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(121, 192, 255, 0.45);
   box-shadow:
-    0 0 28px rgba(121, 192, 255, 0.18),
-    0 24px 60px -12px rgba(0, 0, 0, 0.92);
+    0 0 24px rgba(121, 192, 255, 0.16),
+    0 20px 50px -12px rgba(0, 0, 0, 0.9);
 }
 
 /* Interactive Table Row Sweep */
 tbody tr {
   position: relative;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.12s ease;
 }
 
 tbody tr:hover {
