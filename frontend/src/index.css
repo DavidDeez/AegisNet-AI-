@@ -204,6 +204,50 @@ main .bg-\[\#0d1117\]:hover,
     0 20px 50px -12px rgba(0, 0, 0, 0.9);
 }
 
+/* GradeGuide Sub-Navigation Tabs (.nav-tab) */
+.nav-container {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--panel-border);
+  overflow-x: auto;
+}
+
+.nav-tab {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-size: 13px;
+  font-family: var(--font-heading);
+}
+
+.nav-tab:hover {
+  color: var(--text-main);
+  border-bottom-color: var(--panel-border);
+}
+
+.nav-tab.active {
+  color: #f0f6fc;
+  border-bottom-color: #f78166;
+  font-weight: 600;
+}
+
+/* GradeGuide Glitch Brand Animation */
+@keyframes glitch {
+  0%, 100% { text-shadow: 2px 2px 0px #161b22; transform: translate(0); }
+  20% { text-shadow: 2px 2px 0px #161b22; transform: translate(0); }
+  21% { text-shadow: -2px 0 #0ff, 2px 0 #f0f; transform: translate(-1px, 1px); }
+  23% { text-shadow: 2px 0 #0ff, -2px 0 #f0f; transform: translate(1px, -1px); }
+  25% { text-shadow: 2px 2px 0px #161b22; transform: translate(0); }
+}
+
+.glitch-title {
+  animation: glitch 5s infinite;
+}
+
 /* Interactive Table Row Sweep */
 tbody tr {
   position: relative;

@@ -185,6 +185,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
   onBatchAnalyzed,
   onInspectEvent,
 }) => {
+  const [subTab, setSubTab] = useState<'csv' | 'benchmark' | 'probe' | 'results'>('csv');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [deduplicate, setDeduplicate] = useState(true);
   const [sliceSize, setSliceSize] = useState(60);
@@ -222,6 +223,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
     try {
       const res = await aegisApi.uploadCsv(selectedFile, deduplicate);
       setResult(res);
+      setSubTab('results');
       onBatchAnalyzed();
     } catch (err: any) {
       setError(err.message || 'CSV upload failed');
@@ -241,6 +243,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
       );
       setResult(res);
       setSliceSeed((prev) => prev + 7);
+      setSubTab('results');
       onBatchAnalyzed();
     } catch (err: any) {
       setError(err.message || 'Failed to score benchmark slice');
@@ -259,6 +262,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
         [customFlow]
       );
       setResult(res);
+      setSubTab('results');
       onBatchAnalyzed();
     } catch (err: any) {
       setError(err.message || 'Flow analysis failed');
@@ -268,12 +272,13 @@ export const DetectionCenterScreen: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 max-w-6xl mx-auto">
       <FlowHoverHud
         event={hoveredEvent}
         x={cursorPos.x}
         y={cursorPos.y}
       />
+
       {error && (
         <div className="bg-red-950/50 border border-red-500/40 rounded-[3px] p-3 flex items-center gap-2.5 text-xs font-mono text-red-200">
           <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
@@ -281,30 +286,59 @@ export const DetectionCenterScreen: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Three Clinical Ingestion Workbenches (No 1/2/3 Tutorial Prose) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* CSV Capture Ingest */}
+      {/* GradeGuide Sub-Navigation Bar (.nav-tab) */}
+      <div className="nav-container">
+        <div
+          className={`nav-tab ${subTab === 'csv' ? 'active' : ''}`}
+          onClick={() => setSubTab('csv')}
+        >
+          1. CSV Dataset Upload
+        </div>
+        <div
+          className={`nav-tab ${subTab === 'benchmark' ? 'active' : ''}`}
+          onClick={() => setSubTab('benchmark')}
+        >
+          2. CIC-IDS2017 Benchmark Slice
+        </div>
+        <div
+          className={`nav-tab ${subTab === 'probe' ? 'active' : ''}`}
+          onClick={() => setSubTab('probe')}
+        >
+          3. Single-Flow Vector Probe
+        </div>
+        {result && (
+          <div
+            className={`nav-tab ${subTab === 'results' ? 'active' : ''}`}
+            onClick={() => setSubTab('results')}
+          >
+            4. Scored Batch Output ({result.events.length})
+          </div>
+        )}
+      </div>
+
+      {/* TAB 1: CSV Capture Ingest */}
+      {subTab === 'csv' && (
         <form
           onSubmit={handleUploadCsv}
-          className="bg-[#0d1117] interactive-tilt border border-white/10 rounded flex flex-col justify-between"
+          className="max-w-xl bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between"
         >
           <div>
-            <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
+            <div className="px-5 py-3.5 border-b border-white/[0.07] flex items-center justify-between font-mono">
               <span className="text-xs font-semibold text-slate-200">
                 INGEST // PCAP_FLOW_CSV
               </span>
-              <Upload className="w-3.5 h-3.5 text-slate-400" />
+              <Upload className="w-4 h-4 text-[#79c0ff]" />
             </div>
 
-            <div className="p-4 space-y-3">
-              <label className="block border border-dashed border-white/15 hover:border-white/35 rounded-[3px] p-5 text-center cursor-pointer bg-[#090c10] transition">
-                <FileSpreadsheet className="w-5 h-5 text-slate-400 mx-auto mb-1.5" />
-                <span className="text-xs text-slate-200 font-mono block truncate">
+            <div className="p-6 space-y-4">
+              <label className="block border border-dashed border-white/20 hover:border-[#79c0ff] rounded-[6px] p-8 text-center cursor-pointer bg-[#090c10] transition">
+                <FileSpreadsheet className="w-7 h-7 text-[#79c0ff] mx-auto mb-2" />
+                <span className="text-sm text-slate-100 font-mono block truncate">
                   {selectedFile
                     ? `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} KB)`
                     : 'SELECT CICFLOWMETER / NETFLOW .CSV'}
                 </span>
-                <span className="text-[10px] font-mono text-slate-500 block mt-1">
+                <span className="text-[11px] font-mono text-slate-500 block mt-1.5">
                   MAX 50 MB // AUTO-SANITIZES NaN & INF
                 </span>
                 <input
@@ -329,31 +363,33 @@ export const DetectionCenterScreen: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="p-4 pt-0">
+          <div className="p-6 pt-0">
             <button
               type="submit"
               disabled={!selectedFile || busy}
-              className="w-full py-2 px-4 text-xs font-mono font-medium rounded-[3px] bg-white/[0.08] text-white border border-white/15 hover:bg-white/[0.14] disabled:opacity-40 transition"
+              className="w-full py-2.5 px-4 text-xs font-mono font-medium rounded-[6px] bg-[#21262d] text-white border border-[#30363d] hover:border-[#79c0ff] disabled:opacity-40 transition"
             >
               {busy ? 'RUNNING PIPELINE...' : 'EXEC // VALIDATE & SCORE CSV'}
             </button>
           </div>
         </form>
+      )}
 
-        {/* Holdout Benchmark Slice */}
-        <div className="bg-[#0d1117] interactive-tilt border border-white/10 rounded flex flex-col justify-between">
+      {/* TAB 2: Holdout Benchmark Slice */}
+      {subTab === 'benchmark' && (
+        <div className="max-w-xl bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between">
           <div>
-            <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
+            <div className="px-5 py-3.5 border-b border-white/[0.07] flex items-center justify-between font-mono">
               <span className="text-xs font-semibold text-slate-200">
                 REPLAY // CICIDS2017_SLICE
               </span>
-              <Play className="w-3.5 h-3.5 text-slate-400" />
+              <Play className="w-4 h-4 text-[#56d364]" />
             </div>
 
-            <div className="p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-xs font-mono">
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">
+                  <label className="text-[10px] text-slate-400 block mb-1.5">
                     FLOW_COUNT
                   </label>
                   <input
@@ -362,18 +398,18 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                     max={500}
                     value={sliceSize}
                     onChange={(e) => setSliceSize(Number(e.target.value))}
-                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2.5 py-1.5 text-slate-100"
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-3 py-2 text-slate-100"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">
+                  <label className="text-[10px] text-slate-400 block mb-1.5">
                     PRNG_SEED
                   </label>
                   <input
                     type="number"
                     value={sliceSeed}
                     onChange={(e) => setSliceSeed(Number(e.target.value))}
-                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2.5 py-1.5 text-slate-100"
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-3 py-2 text-slate-100"
                   />
                 </div>
               </div>
@@ -390,12 +426,12 @@ export const DetectionCenterScreen: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="p-4 pt-0">
+          <div className="p-6 pt-0">
             <button
               type="button"
               onClick={handleRunBenchmarkSlice}
               disabled={busy}
-              className="w-full py-2 px-4 text-xs font-mono font-medium rounded-[3px] bg-white/[0.08] text-white border border-white/15 hover:bg-white/[0.14] disabled:opacity-40 transition"
+              className="w-full py-2.5 px-4 text-xs font-mono font-medium rounded-[6px] bg-[#21262d] text-white border border-[#30363d] hover:border-[#56d364] disabled:opacity-40 transition"
             >
               {busy
                 ? 'SCORING BATCH...'
@@ -403,29 +439,31 @@ export const DetectionCenterScreen: React.FC<Props> = ({
             </button>
           </div>
         </div>
+      )}
 
-        {/* Single-Flow Vector Probe */}
+      {/* TAB 3: Single-Flow Vector Probe */}
+      {subTab === 'probe' && (
         <form
           onSubmit={handleAnalyzeSingleFlow}
-          className="bg-[#0d1117] interactive-tilt border border-white/10 rounded flex flex-col justify-between"
+          className="max-w-xl bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between"
         >
           <div>
-            <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
+            <div className="px-5 py-3.5 border-b border-white/[0.07] flex items-center justify-between font-mono">
               <span className="text-xs font-semibold text-slate-200">
                 PROBE // FLOW_VECTOR_SYNTHESIZER
               </span>
-              <Sliders className="w-3.5 h-3.5 text-slate-400" />
+              <Sliders className="w-4 h-4 text-[#d2a8ff]" />
             </div>
 
-            <div className="p-4 space-y-3">
+            <div className="p-6 space-y-4">
               <div>
-                <label className="text-[10px] font-mono text-slate-400 block mb-1">
+                <label className="text-[10px] font-mono text-slate-400 block mb-1.5">
                   VECTOR_PRESET
                 </label>
                 <select
                   value={selectedPreset}
                   onChange={(e) => handlePresetChange(e.target.value)}
-                  className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2.5 py-1.5 text-xs font-mono text-slate-100"
+                  className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-3 py-2 text-xs font-mono text-slate-100"
                 >
                   {Object.entries(PRESET_FLOW_PROFILES).map(([k, v]) => (
                     <option key={k} value={k}>
@@ -435,9 +473,9 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                 </select>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+              <div className="grid grid-cols-3 gap-3 text-xs font-mono">
                 <div>
-                  <label className="text-[10px] text-slate-500 block">
+                  <label className="text-[10px] text-slate-500 block mb-1">
                     DST_PORT
                   </label>
                   <input
@@ -449,11 +487,11 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                         destination_port: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-2.5 py-1.5 text-slate-200"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500 block">
+                  <label className="text-[10px] text-slate-500 block mb-1">
                     DUR_US
                   </label>
                   <input
@@ -465,11 +503,11 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                         flow_duration: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-2.5 py-1.5 text-slate-200"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500 block">
+                  <label className="text-[10px] text-slate-500 block mb-1">
                     BYTES_S
                   </label>
                   <input
@@ -481,11 +519,11 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                         flow_bytes_s: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-2.5 py-1.5 text-slate-200"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500 block">
+                  <label className="text-[10px] text-slate-500 block mb-1">
                     FWD_PKTS
                   </label>
                   <input
@@ -497,11 +535,11 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                         total_fwd_packets: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-2.5 py-1.5 text-slate-200"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500 block">
+                  <label className="text-[10px] text-slate-500 block mb-1">
                     SYN_CNT
                   </label>
                   <input
@@ -513,11 +551,11 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                         syn_flag_count: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-2.5 py-1.5 text-slate-200"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-500 block">
+                  <label className="text-[10px] text-slate-500 block mb-1">
                     INIT_WIN
                   </label>
                   <input
@@ -529,27 +567,27 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                         init_win_bytes_forward: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-[#090c10] border border-white/10 rounded-[2px] px-2 py-1 text-slate-200"
+                    className="w-full bg-[#090c10] border border-white/10 rounded-[4px] px-2.5 py-1.5 text-slate-200"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-4 pt-0">
+          <div className="p-6 pt-0">
             <button
               type="submit"
               disabled={busy}
-              className="w-full py-2 px-4 text-xs font-mono font-medium rounded-[3px] bg-white/[0.08] text-white border border-white/15 hover:bg-white/[0.14] disabled:opacity-40 transition"
+              className="w-full py-2.5 px-4 text-xs font-mono font-medium rounded-[6px] bg-[#21262d] text-white border border-[#30363d] hover:border-[#d2a8ff] disabled:opacity-40 transition"
             >
               {busy ? 'SCORING VECTOR...' : 'EXEC // SCORE & EXPLAIN VECTOR'}
             </button>
           </div>
         </form>
-      </div>
+      )}
 
-      {/* Batch Execution Output Ledger */}
-      {result && (
+      {/* TAB 4: Batch Execution Output Ledger */}
+      {subTab === 'results' && result && (
         <div className="bg-[#0d1117] border border-white/10 rounded">
           <div className="px-4 py-3 border-b border-white/[0.07] flex flex-wrap items-center justify-between gap-4 font-mono">
             <div>
@@ -601,8 +639,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                   <th className="py-2 px-3">SEV</th>
                   <th className="py-2 px-3 text-right">P(y|x)</th>
                   <th className="py-2 px-3 text-right">ENTROPY</th>
-                  <th className="py-2 px-3 text-right">IF_SCORE</th>
-                  <th className="py-2 px-4">ATTRIBUTION SUMMARY</th>
+                  <th className="py-2 px-4 text-right">IF_SCORE</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.05]">
@@ -622,36 +659,33 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                     }}
                     className="cursor-pointer"
                   >
-                    <td className="py-2 px-4 text-slate-200 font-medium">
+                    <td className="py-2.5 px-4 text-[#79c0ff] font-medium">
                       {ev.event_uid}
                     </td>
-                    <td className="py-2 px-3 text-slate-300">
+                    <td className="py-2.5 px-3 text-slate-300">
                       {ev.src_ip} → {ev.dst_ip}:{ev.dst_port}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-2.5 px-3">
                       <TriageBadge category={ev.triage_category} />
                     </td>
-                    <td className="py-2 px-3 text-slate-100">
+                    <td className="py-2.5 px-3 text-slate-100">
                       {ev.predicted_label}
                     </td>
-                    <td className="py-2 px-3 text-slate-400">
+                    <td className="py-2.5 px-3 text-slate-400">
                       {ev.ground_truth_label || '—'}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-2.5 px-3">
                       <SeverityBadge severity={ev.severity} />
                     </td>
-                    <td className="py-2 px-3 text-right text-slate-200">
+                    <td className="py-2.5 px-3 text-right text-slate-200">
                       {(ev.supervised_confidence * 100).toFixed(1)}%
                     </td>
-                    <td className="py-2 px-3 text-right text-slate-300">
+                    <td className="py-2.5 px-3 text-right text-slate-300">
                       {ev.predictive_entropy.toFixed(3)}
                     </td>
-                    <td className="py-2 px-3 text-right text-amber-300/90">
+                    <td className="py-2.5 px-4 text-right text-amber-300/90">
                       {ev.anomaly_score.toFixed(3)} (p
                       {ev.anomaly_percentile.toFixed(1)})
-                    </td>
-                    <td className="py-2 px-4 text-slate-400 max-w-xs truncate">
-                      {ev.rationale_text}
                     </td>
                   </tr>
                 ))}
