@@ -12,6 +12,8 @@ import {
   Search,
   Radio,
   Download,
+  PanelLeftClose,
+  PanelLeftOpen,
   X,
 } from 'lucide-react';
 import { aegisApi } from './api/client';
@@ -25,7 +27,11 @@ import { ModelLabScreen } from './screens/ModelLabScreen';
 import { MonitoringScreen } from './screens/MonitoringScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { TriageBadge } from './components/Badge';
-import { useGlobalGlassCursorEngine } from './components/InteractiveEffects';
+import {
+  AegisLogo,
+  ElectronCanvasBackground,
+  useGlobalGlassCursorEngine,
+} from './components/InteractiveEffects';
 
 const NAV_ITEMS = [
   { id: 'overview', key: '1', label: 'Overview', icon: LayoutDashboard },
@@ -40,7 +46,9 @@ const NAV_ITEMS = [
 
 export const App: React.FC = () => {
   useGlobalGlassCursorEngine();
+
   const [activeTab, setActiveTab] = useState<string>('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [threatIntel, setThreatIntel] = useState<ThreatIntelResponse | null>(
     null
@@ -100,12 +108,17 @@ export const App: React.FC = () => {
     refreshCoreData();
   }, []);
 
-  // Keyboard shortcuts: Ctrl+K for Command Palette, 1-8 for direct screen switching
+  // Keyboard shortcuts: Ctrl+K for Command Palette, Ctrl+B or [ to toggle sidebar, 1-8 for screens
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setCmdOpen((prev) => !prev);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setSidebarCollapsed((prev) => !prev);
         return;
       }
       if (e.key === 'Escape') {
@@ -114,6 +127,10 @@ export const App: React.FC = () => {
       }
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || cmdOpen) {
+        return;
+      }
+      if (e.key === '[') {
+        setSidebarCollapsed((prev) => !prev);
         return;
       }
       const found = NAV_ITEMS.find((n) => n.key === e.key);
@@ -197,119 +214,202 @@ export const App: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen text-slate-200 flex flex-col">
-      <div className="flex-1 flex min-h-0">
-        {/* Left Smoked-Glass SOC Console Sidebar */}
-        <aside className="w-60 bg-[#0d1117] border-r border-white/[0.08] flex flex-col justify-between shrink-0 z-20">
-          <div>
-            {/* Technical Wordmark Header (No Generic Glowing Shield Icon) */}
-            <div className="px-4 py-3.5 border-b border-white/[0.08] flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-2 h-4 bg-slate-100 rounded-[1px]" />
-                <div>
-                  <div className="text-xs font-mono font-bold tracking-widest text-white">
-                    AEGIS // NET
-                  </div>
-                  <div className="text-[10px] font-mono text-slate-500">
-                    FLOW NIDS & OPEN-SET XAI
-                  </div>
-                </div>
+    <div className="h-screen w-screen overflow-hidden text-slate-200 flex flex-col relative">
+      {/* Perpetual Floating Electron & Electrostatic Lattice Canvas Background */}
+      <ElectronCanvasBackground />
+
+      {/* Main Locked Console Area (Sidebar + Right Viewport; neither sidebar nor top bar scrolls away) */}
+      <div className="flex-1 flex min-h-0 overflow-hidden relative z-10">
+        {/* Collapsible & Locked Left SOC Sidebar */}
+        <aside
+          className={`${
+            sidebarCollapsed ? 'w-[68px]' : 'w-60'
+          } h-full bg-[#0d1117] border-r border-white/[0.08] flex flex-col justify-between shrink-0 z-20 transition-all duration-300 ease-out select-none overflow-hidden`}
+        >
+          <div className="flex flex-col min-h-0">
+            {/* Custom Vector AegisNet Crest & Collapse Button */}
+            <div
+              className={`h-14 px-3.5 border-b border-white/[0.08] flex items-center ${
+                sidebarCollapsed ? 'justify-center' : 'justify-between'
+              } shrink-0`}
+            >
+              <div
+                onClick={() => setActiveTab('overview')}
+                className="cursor-pointer"
+                title="AegisNet — Open-Set XAI NIDS"
+              >
+                <AegisLogo collapsed={sidebarCollapsed} size={34} />
               </div>
-              <span className="px-1.5 py-0.5 text-[9px] font-mono text-slate-400 bg-white/[0.04] border border-white/10 rounded-[2px]">
-                v1.0
-              </span>
+
+              {!sidebarCollapsed && (
+                <button
+                  onClick={() => setSidebarCollapsed(true)}
+                  className="p-1.5 rounded-[3px] text-slate-400 hover:text-white hover:bg-white/[0.06] transition"
+                  title="Collapse Sidebar ([ or Ctrl+B)"
+                >
+                  <PanelLeftClose className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
-            <div className="px-4 pt-3 pb-1 text-[10px] font-mono text-slate-500 tracking-wider">
-              OPERATIONS CONSOLE
-            </div>
+            {!sidebarCollapsed && (
+              <div className="px-4 pt-3 pb-1 text-[10px] font-mono text-slate-500 tracking-wider flex items-center justify-between">
+                <span>OPERATIONS CONSOLE</span>
+                <span>[1-8]</span>
+              </div>
+            )}
 
-            <nav className="px-2.5 py-1 space-y-0.5">
+            <nav
+              className={`px-2 py-2 space-y-1 overflow-y-auto ${
+                sidebarCollapsed ? 'mt-1' : ''
+              }`}
+            >
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
+                const hasBadge =
+                  item.id === 'events' &&
+                  overview &&
+                  overview.pending_triage > 0;
+
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-[3px] text-xs font-mono transition-colors ${
+                    title={`${item.label} [${item.key}]`}
+                    className={`w-full relative flex items-center ${
+                      sidebarCollapsed
+                        ? 'justify-center py-2.5 px-0'
+                        : 'justify-between px-3 py-2'
+                    } rounded-[3px] text-xs font-mono transition-all ${
                       isActive
-                        ? 'bg-white/[0.08] text-white border-l-2 border-l-slate-100 font-medium'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                        ? 'bg-white/[0.1] text-white border-l-2 border-l-sky-400 font-medium shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.04]'
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
                       <Icon
-                        className={`w-3.5 h-3.5 ${
-                          isActive ? 'text-slate-100' : 'text-slate-500'
+                        className={`w-4 h-4 shrink-0 ${
+                          isActive ? 'text-sky-300' : 'text-slate-400'
                         }`}
                       />
-                      <span>{item.label}</span>
+                      {!sidebarCollapsed && (
+                        <span className="truncate">{item.label}</span>
+                      )}
                     </span>
-                    <span className="flex items-center gap-1.5">
-                      {item.id === 'events' &&
-                        overview &&
-                        overview.pending_triage > 0 && (
-                          <span className="px-1.5 py-0.2 text-[10px] font-mono rounded-[2px] bg-red-500/15 text-red-300 border border-red-500/30">
-                            {overview.pending_triage}
+
+                    {!sidebarCollapsed ? (
+                      <span className="flex items-center gap-1.5">
+                        {hasBadge && (
+                          <span className="px-1.5 py-0.2 text-[10px] font-mono rounded-[2px] bg-red-500/20 text-red-300 border border-red-500/35">
+                            {overview?.pending_triage}
                           </span>
                         )}
-                      <span className="text-[10px] text-slate-600">
-                        [{item.key}]
+                        <span className="text-[10px] text-slate-600">
+                          [{item.key}]
+                        </span>
                       </span>
-                    </span>
+                    ) : (
+                      hasBadge && (
+                        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-red-500" />
+                      )
+                    )}
                   </button>
                 );
               })}
             </nav>
           </div>
 
-          {/* Compact Telemetry Metadata Block */}
-          <div className="p-3 m-2.5 rounded-[3px] bg-[#090c10] border border-white/[0.07] space-y-1.5 text-[10px] font-mono">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">PIPELINE</span>
+          {/* Bottom Sidebar Status / Expand Toggle */}
+          {sidebarCollapsed ? (
+            <div className="p-2.5 border-t border-white/[0.08] flex flex-col items-center gap-3">
               <span
-                className={`inline-flex items-center gap-1.5 ${
+                title={
                   overview?.system_health?.ml_engine_ready
-                    ? 'text-emerald-400'
-                    : 'text-amber-400'
+                    ? 'Engine Ready'
+                    : 'Syncing'
+                }
+                className={`w-2.5 h-2.5 rounded-full ${
+                  overview?.system_health?.ml_engine_ready
+                    ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
+                    : 'bg-amber-400'
                 }`}
+              />
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="p-1.5 rounded-[3px] text-slate-400 hover:text-white hover:bg-white/[0.06] transition"
+                title="Expand Sidebar ([ or Ctrl+B)"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                {overview?.system_health?.ml_engine_ready ? 'READY' : 'SYNC'}
-              </span>
+                <PanelLeftOpen className="w-4 h-4" />
+              </button>
             </div>
-            <div className="text-slate-400 truncate">
-              ID: {overview?.system_health?.active_model_version || '—'}
+          ) : (
+            <div className="p-3 m-2.5 rounded-[3px] bg-[#090c10] border border-white/[0.07] space-y-1.5 text-[10px] font-mono shrink-0">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">PIPELINE</span>
+                <span
+                  className={`inline-flex items-center gap-1.5 ${
+                    overview?.system_health?.ml_engine_ready
+                      ? 'text-emerald-400'
+                      : 'text-amber-400'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  {overview?.system_health?.ml_engine_ready ? 'READY' : 'SYNC'}
+                </span>
+              </div>
+              <div className="text-slate-400 truncate">
+                ID: {overview?.system_health?.active_model_version || '—'}
+              </div>
+              <div className="text-slate-500 flex items-center justify-between">
+                <span>INGEST:</span>
+                <span className="text-slate-300">
+                  {liveReplayActive ? 'REPLAY_STREAM' : 'BATCH_VERIFIED'}
+                </span>
+              </div>
             </div>
-            <div className="text-slate-500 flex items-center justify-between">
-              <span>INGEST:</span>
-              <span className="text-slate-300">
-                {liveReplayActive ? 'REPLAY_STREAM' : 'BATCH_VERIFIED'}
-              </span>
-            </div>
-          </div>
+          )}
         </aside>
 
-        {/* Main Console Viewport */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Top Console Bar */}
-          <header className="h-12 bg-[#0d1117] border-b border-white/[0.08] px-5 flex items-center justify-between sticky top-0 z-10">
-            <div className="flex items-center gap-2.5 font-mono">
-              <span className="text-[11px] text-slate-500">CONSOLE //</span>
-              <h1 className="text-xs font-semibold text-white uppercase tracking-wider">
-                {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
-              </h1>
+        {/* Right Column: Fixed Top Bar + Independently Scrollable Main Viewport */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+          {/* Locked Top Console Bar (Never Scrolls Out of View) */}
+          <header className="h-14 bg-[#0d1117] border-b border-white/[0.08] px-5 flex items-center justify-between shrink-0 z-20">
+            <div className="flex items-center gap-3 font-mono">
+              <button
+                onClick={() => setSidebarCollapsed((prev) => !prev)}
+                className="p-1.5 rounded-[3px] bg-[#090c10] border border-white/10 text-slate-300 hover:text-white hover:border-white/25 transition"
+                title={
+                  sidebarCollapsed
+                    ? 'Open Sidebar ([ or Ctrl+B)'
+                    : 'Close Sidebar ([ or Ctrl+B)'
+                }
+              >
+                {sidebarCollapsed ? (
+                  <PanelLeftOpen className="w-3.5 h-3.5 text-sky-400" />
+                ) : (
+                  <PanelLeftClose className="w-3.5 h-3.5 text-slate-400" />
+                )}
+              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-500 hidden sm:inline">
+                  CONSOLE //
+                </span>
+                <h1 className="text-xs font-semibold text-white uppercase tracking-wider">
+                  {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
+                </h1>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Command Palette Trigger */}
               <button
                 onClick={() => setCmdOpen(true)}
-                className="px-2.5 py-1 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white hover:border-white/25 inline-flex items-center gap-2 transition"
+                className="px-2.5 py-1.5 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white hover:border-white/25 inline-flex items-center gap-2 transition"
                 title="Open Command Palette (Ctrl+K)"
               >
-                <Search className="w-3 h-3 text-slate-400" />
+                <Search className="w-3 h-3 text-sky-400" />
                 <span className="hidden sm:inline">Search / Command</span>
                 <kbd className="px-1 py-0.2 text-[9px] rounded-[2px] bg-white/[0.05] text-slate-400">
                   Ctrl+K
@@ -319,7 +419,7 @@ export const App: React.FC = () => {
               {/* Live Benchmark Replay Stream Toggle */}
               <button
                 onClick={() => setLiveReplayActive((prev) => !prev)}
-                className={`px-2.5 py-1 rounded-[3px] text-[11px] font-mono border inline-flex items-center gap-1.5 transition ${
+                className={`px-2.5 py-1.5 rounded-[3px] text-[11px] font-mono border inline-flex items-center gap-1.5 transition ${
                   liveReplayActive
                     ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
                     : 'bg-[#090c10] text-slate-300 border-white/10 hover:text-white'
@@ -341,7 +441,7 @@ export const App: React.FC = () => {
               <a
                 href={aegisApi.getExportCsvUrl()}
                 download="aegisnet_forensic_events.csv"
-                className="px-2.5 py-1 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white hidden md:inline-flex items-center gap-1.5 transition"
+                className="px-2.5 py-1.5 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white hidden md:inline-flex items-center gap-1.5 transition"
               >
                 <Download className="w-3 h-3 text-slate-400" />
                 <span>EXPORT CSV</span>
@@ -350,7 +450,7 @@ export const App: React.FC = () => {
               {/* Refresh */}
               <button
                 onClick={refreshCoreData}
-                className="px-2.5 py-1 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white inline-flex items-center gap-1.5 transition"
+                className="px-2.5 py-1.5 rounded-[3px] bg-[#090c10] border border-white/10 text-[11px] font-mono text-slate-300 hover:text-white inline-flex items-center gap-1.5 transition"
               >
                 <RefreshCw
                   className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`}
@@ -362,7 +462,7 @@ export const App: React.FC = () => {
 
           {/* Stream Activity Banner */}
           {streamToast && (
-            <div className="mx-5 mt-3 px-3.5 py-2 rounded-[3px] bg-[#0d1117] border border-white/15 border-l-2 border-l-emerald-400 flex items-center justify-between text-xs font-mono text-slate-200">
+            <div className="mx-5 mt-3 px-3.5 py-2 rounded-[3px] bg-[#0d1117] border border-white/15 border-l-2 border-l-emerald-400 flex items-center justify-between text-xs font-mono text-slate-200 shrink-0">
               <span>{streamToast}</span>
               <button
                 onClick={() => setStreamToast(null)}
@@ -373,8 +473,8 @@ export const App: React.FC = () => {
             </div>
           )}
 
-          {/* Main Workspace */}
-          <main className="p-5 flex-1 overflow-y-auto">
+          {/* Independently Scrollable Workspace Content */}
+          <main className="p-5 flex-1 overflow-y-auto min-h-0">
             {backendError && (
               <div className="mb-4 bg-red-950/50 border border-red-500/40 rounded-[3px] p-3 text-xs font-mono text-red-200">
                 [ERR_BACKEND_UNREACHABLE] {backendError}
@@ -435,8 +535,8 @@ export const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Terminal Status Bar */}
-      <footer className="h-7 bg-[#090c10] border-t border-white/[0.08] px-4 flex items-center justify-between text-[10px] font-mono text-slate-400 select-none z-20">
+      {/* Locked Bottom Terminal Status Bar */}
+      <footer className="h-7 bg-[#090c10] border-t border-white/[0.08] px-4 flex items-center justify-between text-[10px] font-mono text-slate-400 select-none shrink-0 z-20">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 text-emerald-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -459,13 +559,13 @@ export const App: React.FC = () => {
         </div>
         <div className="flex items-center gap-4">
           <span className="hidden sm:inline text-slate-500">
-            KEYS: [1-8] NAVIGATE // [CTRL+K] COMMAND
+            KEYS: [1-8] NAV // [ [ ] SIDEBAR // [CTRL+K] CMD
           </span>
           <span className="text-slate-300">{utcClock}</span>
         </div>
       </footer>
 
-      {/* Command Palette Modal (Ctrl+K) — Clinical Console Style (No Emojis) */}
+      {/* Command Palette Modal (Ctrl+K) */}
       {cmdOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center pt-20 p-4"
