@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity } from 'lucide-react';
+import { Activity, Sparkles, Zap } from 'lucide-react';
 import type { NetworkEventRecord } from '../types/aegis';
 import { SeverityBadge, TriageBadge } from './Badge';
 
 /**
- * 0. Bespoke AegisNet Vector Crest & Wordmark Logo with GradeGuide `.draw-icon` SVG Path Animation
- * and `.holographic-text` Brand Title.
+ * 0. Bespoke AegisNet Vector Crest & Wordmark Logo with Continuous Rotating Orbital Rings
+ * and GradeGuide `.holographic-text` Brand Title.
  */
 export const AegisLogo: React.FC<{
   collapsed?: boolean;
@@ -15,15 +15,15 @@ export const AegisLogo: React.FC<{
     <div className="flex items-center gap-3 select-none group">
       <div
         style={{ width: size, height: size }}
-        className="relative shrink-0 flex items-center justify-center"
+        className="relative shrink-0 flex items-center justify-center float-anim-1"
       >
-        <div className="absolute inset-0 rounded-lg bg-[#79c0ff]/20 blur-md group-hover:bg-[#d2a8ff]/30 transition-all duration-300" />
+        <div className="absolute inset-0 rounded-lg bg-[#79c0ff]/25 blur-md group-hover:bg-[#d2a8ff]/40 transition-all duration-300" />
 
         <svg
           viewBox="0 0 64 64"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full relative z-10 draw-icon drop-shadow-[0_0_10px_rgba(121,192,255,0.35)]"
+          className="w-full h-full relative z-10 draw-icon drop-shadow-[0_0_10px_rgba(121,192,255,0.45)]"
         >
           <defs>
             <linearGradient
@@ -46,7 +46,7 @@ export const AegisLogo: React.FC<{
               y2="52"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stopColor="rgba(121, 192, 255, 0.25)" />
+              <stop offset="0%" stopColor="rgba(121, 192, 255, 0.28)" />
               <stop offset="100%" stopColor="rgba(22, 27, 34, 0.9)" />
             </linearGradient>
           </defs>
@@ -67,82 +67,48 @@ export const AegisLogo: React.FC<{
             strokeWidth="1.3"
           />
 
-          {/* Orbital Electron Rings */}
-          <ellipse
-            cx="32"
-            cy="32"
-            rx="16"
-            ry="7.5"
-            transform="rotate(-28 32 32)"
-            stroke="#d2a8ff"
-            strokeWidth="1.1"
-            strokeDasharray="3 2"
-          />
-          <ellipse
-            cx="32"
-            cy="32"
-            rx="16"
-            ry="7.5"
-            transform="rotate(28 32 32)"
-            stroke="#79c0ff"
-            strokeWidth="1.1"
-          />
+          {/* Perpetually Rotating Orbital Electron Rings */}
+          <g className="orbit-cw">
+            <ellipse
+              cx="32"
+              cy="32"
+              rx="17"
+              ry="8"
+              stroke="#d2a8ff"
+              strokeWidth="1.2"
+              strokeDasharray="4 2"
+            />
+            <circle cx="49" cy="32" r="2" fill="#d2a8ff" />
+          </g>
 
-          {/* Neural Flow Lattice Lines */}
-          <line
-            x1="32"
-            y1="17"
-            x2="21"
-            y2="37"
-            stroke="#f0f6fc"
-            strokeWidth="1.5"
-          />
-          <line
-            x1="32"
-            y1="17"
-            x2="43"
-            y2="37"
-            stroke="#f0f6fc"
-            strokeWidth="1.5"
-          />
-          <line
-            x1="21"
-            y1="37"
-            x2="43"
-            y2="37"
-            stroke="#79c0ff"
-            strokeWidth="1.4"
-          />
-          <line
-            x1="32"
-            y1="17"
-            x2="32"
-            y2="46"
-            stroke="#d2a8ff"
-            strokeWidth="1.3"
-          />
+          <g className="orbit-ccw">
+            <ellipse
+              cx="32"
+              cy="32"
+              rx="8"
+              ry="17"
+              stroke="#79c0ff"
+              strokeWidth="1.2"
+              strokeDasharray="4 2"
+            />
+            <circle cx="32" cy="15" r="2" fill="#79c0ff" />
+          </g>
 
-          {/* Vertex Electron Nodes */}
-          <circle cx="32" cy="17" r="2.6" fill="#ffffff" />
-          <circle cx="21" cy="37" r="2.4" fill="#79c0ff" />
-          <circle cx="43" cy="37" r="2.4" fill="#d2a8ff" />
-          <circle cx="32" cy="46" r="2.2" fill="#ff7b72" />
-
-          {/* Central Sentinel Core */}
+          {/* Central Pulsing Sentinel Core */}
           <circle
             cx="32"
-            cy="31"
-            r="3.5"
+            cy="32"
+            r="4.2"
             fill="#79c0ff"
             stroke="#ffffff"
-            strokeWidth="1.2"
+            strokeWidth="1.4"
           />
         </svg>
       </div>
 
       {!collapsed && (
         <div className="leading-none overflow-hidden">
-          <div className="brand-title text-[17px] font-bold tracking-tight holographic-text">
+          <div className="brand-title text-[17px] font-bold tracking-tight holographic-text glitch-title">
             AEGISNET.ai
           </div>
           <div className="text-[10px] font-mono text-[#8b949e] mt-1 truncate">
@@ -155,15 +121,78 @@ export const AegisLogo: React.FC<{
 };
 
 /**
- * 1. GradeGuide Excited Perpetual Electron / Starfield Canvas Background (Multiplied Density!)
- * Exact physics from GradeGuide's `ParticleBackground`:
- * - Multiplied particle count (`(width * height) / 4200` -> ~350-450 stars/electrons on 1080p)
- * - Excited velocity `(Math.random() - 0.5) * 1.65`
- * - Mouse repulsion force field (`mouse.radius = 155`, `force * 5` push-away)
- * - Dynamic constellation connections (`distance < 135`)
+ * 0B. GradeGuide-Inspired Isometric Floating Cyber-Sentinel Flyer
+ * Perpetually flies diagonally across the background layer with a spinning radar dish.
+ */
+export const FloatingSentinelDrone: React.FC = () => (
+  <div className="sentinel-flyer">
+    <svg width="150" height="120" viewBox="0 0 150 120" fill="none">
+      <g transform="translate(20, 15)">
+        {/* Isometric Satellite Wings */}
+        <polygon
+          points="10,55 45,35 55,45 20,65"
+          fill="rgba(121, 192, 255, 0.18)"
+          stroke="#79c0ff"
+          strokeWidth="1"
+        />
+        <polygon
+          points="65,25 100,5 110,15 75,35"
+          fill="rgba(210, 168, 255, 0.18)"
+          stroke="#d2a8ff"
+          strokeWidth="1"
+        />
+        {/* Central Isometric Telemetry Core */}
+        <polygon
+          points="45,30 70,18 82,30 57,42"
+          fill="#161b22"
+          stroke="#f0f6fc"
+          strokeWidth="1.2"
+        />
+        {/* Spinning Radar Dish */}
+        <g className="orbit-cw" style={{ transformOrigin: '63px 30px' }}>
+          <ellipse
+            cx="63"
+            cy="30"
+            rx="16"
+            ry="5"
+            stroke="#79c0ff"
+            strokeWidth="1.2"
+          />
+          <ellipse
+            cx="63"
+            cy="30"
+            rx="5"
+            ry="16"
+            stroke="#d2a8ff"
+            strokeWidth="1.2"
+          />
+        </g>
+        <circle cx="63" cy="30" r="3" fill="#39d353" />
+      </g>
+    </svg>
+  </div>
+);
+
+/**
+ * 1. Functional Interactive Perpetual Electron Starfield + Live Travelling Data Packets
+ *    + Click-to-Spawn Electromagnetic Shockwaves + Interactive Physics Controller Pill!
  */
 export const ElectronCanvasBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [cursorMode, setCursorMode] = useState<'repel' | 'attract' | 'orbit'>(
+    'repel'
+  );
+  const [speedMult, setSpeedMult] = useState<number>(1.35);
+  const [electronCount, setElectronCount] = useState<number>(155);
+
+  const modeRef = useRef<'repel' | 'attract' | 'orbit'>('repel');
+  const speedRef = useRef<number>(1.35);
+  const burstTriggerRef = useRef<((x?: number, y?: number) => void) | null>(
+    null
+  );
+
+  modeRef.current = cursorMode;
+  speedRef.current = speedMult;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -176,7 +205,7 @@ export const ElectronCanvasBackground: React.FC = () => {
     const mouse: { x: number | null; y: number | null; radius: number } = {
       x: null,
       y: null,
-      radius: 155,
+      radius: 175,
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -189,15 +218,14 @@ export const ElectronCanvasBackground: React.FC = () => {
       mouse.y = null;
     };
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mouseleave', handleMouseLeave);
-
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
 
     window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mouseleave', handleMouseLeave);
     resize();
 
     interface StarElectron {
@@ -207,69 +235,186 @@ export const ElectronCanvasBackground: React.FC = () => {
       vy: number;
       radius: number;
       color: string;
+      phase: number;
+    }
+
+    interface ShockwaveRing {
+      x: number;
+      y: number;
+      radius: number;
+      maxRadius: number;
+      alpha: number;
+      color: string;
     }
 
     const starPalette = [
-      'rgba(201, 209, 217, 0.78)', // GradeGuide signature bright silver
-      'rgba(121, 192, 255, 0.75)', // GradeGuide holographic blue
-      'rgba(210, 168, 255, 0.72)', // GradeGuide holographic violet
-      'rgba(240, 246, 252, 0.85)', // Bright white star
+      '#79c0ff', // GradeGuide holographic cyan
+      '#d2a8ff', // GradeGuide holographic violet
+      '#f0f6fc', // Bright white star
+      '#56d364', // Emerald telemetry electron
+      '#ff7b72', // Coral threat electron
     ];
 
-    // Balanced high-density starfield (~140-175 stars on 1080p) for locked 60fps performance
-    const particleCount = Math.min(
+    const initialCount = Math.min(
       175,
-      Math.max(85, Math.floor((canvas.width * canvas.height) / 11500))
+      Math.max(110, Math.floor((canvas.width * canvas.height) / 10500))
     );
+    setElectronCount(initialCount);
 
     const particles: StarElectron[] = Array.from(
-      { length: particleCount },
+      { length: initialCount },
       (_, i) => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 1.45,
-        vy: (Math.random() - 0.5) * 1.45,
-        radius: Math.random() * 1.6 + 0.6,
+        vx: (Math.random() - 0.5) * 1.55,
+        vy: (Math.random() - 0.5) * 1.55,
+        radius: Math.random() * 1.8 + 0.8,
         color: starPalette[i % starPalette.length],
+        phase: Math.random() * Math.PI * 2,
       })
     );
 
+    const shockwaves: ShockwaveRing[] = [];
+
+    const spawnBurst = (bx?: number, by?: number) => {
+      const cx = bx ?? canvas.width * 0.5;
+      const cy = by ?? canvas.height * 0.5;
+
+      shockwaves.push({
+        x: cx,
+        y: cy,
+        radius: 4,
+        maxRadius: 220,
+        alpha: 0.75,
+        color: '#79c0ff',
+      });
+
+      // Spawn 6 excited electrons radiating outward from click/burst point
+      for (let k = 0; k < 6; k++) {
+        const angle = (Math.PI * 2 * k) / 6 + Math.random() * 0.4;
+        const spd = 1.6 + Math.random() * 1.4;
+        if (particles.length > 210) {
+          particles.shift();
+        }
+        particles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          radius: 2.1,
+          color: starPalette[k % starPalette.length],
+          phase: 0,
+        });
+      }
+      setElectronCount(particles.length);
+    };
+
+    burstTriggerRef.current = spawnBurst;
+
+    // Clicking on empty background areas triggers an interactive shockwave & electron burst
+    const handleWindowClick = (e: MouseEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'A') {
+        return;
+      }
+      spawnBurst(e.clientX, e.clientY);
+    };
+    window.addEventListener('click', handleWindowClick);
+
     const mouseRadiusSq = mouse.radius * mouse.radius;
-    const linkDist = 125;
+    const linkDist = 132;
     const linkDistSq = linkDist * linkDist;
+    let tickCount = 0;
 
     const animate = () => {
+      tickCount += 1;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      const sMult = speedRef.current;
+      const cMode = modeRef.current;
+
+      // 1. Update & draw expanding electromagnetic shockwave rings
+      for (let s = shockwaves.length - 1; s >= 0; s--) {
+        const sw = shockwaves[s];
+        sw.radius += 4.8;
+        sw.alpha *= 0.94;
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(121, 192, 255, ${sw.alpha.toFixed(3)})`;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+        if (sw.radius >= sw.maxRadius || sw.alpha < 0.02) {
+          shockwaves.splice(s, 1);
+        }
+      }
+
+      // 2. Update & draw floating electrons
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
+        p.phase += 0.04;
+        p.x += p.vx * sMult;
+        p.y += p.vy * sMult;
 
-        // Fast squared-distance mouse repulsion check
+        // Interactive Cursor Physics (Repel, Attract, or Vortex Orbit)
         if (mouse.x != null && mouse.y != null) {
           const dx = mouse.x - p.x;
           const dy = mouse.y - p.y;
           const distSq = dx * dx + dy * dy;
-          if (distSq > 0.1 && distSq < mouseRadiusSq) {
+          if (distSq > 1 && distSq < mouseRadiusSq) {
             const distance = Math.sqrt(distSq);
             const force = (mouse.radius - distance) / mouse.radius;
-            p.x -= (dx / distance) * force * 4.5;
-            p.y -= (dy / distance) * force * 4.5;
+            const nx = dx / distance;
+            const ny = dy / distance;
+
+            if (cMode === 'repel') {
+              p.x -= nx * force * 4.8;
+              p.y -= ny * force * 4.8;
+            } else if (cMode === 'attract') {
+              p.x += nx * force * 3.2;
+              p.y += ny * force * 3.2;
+            } else {
+              // Vortex Orbit swirl around cursor
+              p.x += -ny * force * 4.5 + nx * force * 0.9;
+              p.y += nx * force * 4.5 + ny * force * 0.9;
+            }
+
+            // Draw bright laser tether to cursor
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(121, 192, 255, ${(force * 0.35).toFixed(3)})`;
+            ctx.lineWidth = 0.9;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
           }
         }
 
-        if (p.x < 0 || p.x > canvas.width) p.vx = -p.vx;
-        if (p.y < 0 || p.y > canvas.height) p.vy = -p.vy;
+        // Bounce at viewport boundaries
+        if (p.x < 0) {
+          p.x = 0;
+          p.vx = Math.abs(p.vx);
+        } else if (p.x > canvas.width) {
+          p.x = canvas.width;
+          p.vx = -Math.abs(p.vx);
+        }
+        if (p.y < 0) {
+          p.y = 0;
+          p.vy = Math.abs(p.vy);
+        } else if (p.y > canvas.height) {
+          p.y = canvas.height;
+          p.vy = -Math.abs(p.vy);
+        }
 
+        const rPulse = p.radius * (0.85 + 0.25 * Math.sin(p.phase));
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, rPulse, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.fill();
       }
 
-      // Draw GradeGuide Constellation Filaments using fast squared-distance pre-filter
+      // 3. Draw Constellation Filaments + Travelling Network Data Packets Along Filaments!
       ctx.lineWidth = 0.75;
+      const packetProgress = (tickCount * 0.018) % 1;
+
       for (let i = 0; i < particles.length; i++) {
         const pi = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
@@ -281,12 +426,23 @@ export const ElectronCanvasBackground: React.FC = () => {
 
           const distSq = dx * dx + dy * dy;
           if (distSq < linkDistSq) {
-            const alpha = (1 - distSq / linkDistSq) * 0.18;
+            const alpha = (1 - distSq / linkDistSq) * 0.24;
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(201, 209, 217, ${alpha.toFixed(3)})`;
+            ctx.strokeStyle = `rgba(121, 192, 255, ${alpha.toFixed(3)})`;
             ctx.moveTo(pi.x, pi.y);
             ctx.lineTo(pj.x, pj.y);
             ctx.stroke();
+
+            // Every 11th connected pair renders a live glowing data packet travelling from pi -> pj
+            if ((i + j) % 11 === 0) {
+              const t = (packetProgress + ((i * 7) % 10) * 0.1) % 1;
+              const px = pi.x + (pj.x - pi.x) * t;
+              const py = pi.y + (pj.y - pi.y) * t;
+              ctx.beginPath();
+              ctx.arc(px, py, 1.8, 0, Math.PI * 2);
+              ctx.fillStyle = '#ffffff';
+              ctx.fill();
+            }
           }
         }
       }
@@ -301,21 +457,62 @@ export const ElectronCanvasBackground: React.FC = () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('click', handleWindowClick);
     };
   }, []);
 
+  const cycleSpeed = () => {
+    setSpeedMult((prev) => (prev < 1.5 ? 2.4 : prev < 2.6 ? 3.6 : 1.0));
+  };
+
+  const cycleMode = () => {
+    setCursorMode((prev) =>
+      prev === 'repel' ? 'orbit' : prev === 'orbit' ? 'attract' : 'repel'
+    );
+  };
+
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
-      style={{ background: 'var(--bg-dark)' }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{ background: 'var(--bg-dark)' }}
+      />
+
+      {/* Functional Interactive Electron Physics Bar (Bottom-Right Corner) */}
+      <div className="fixed bottom-9 right-4 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#161b22]/90 border border-[#79c0ff]/35 text-[10px] font-mono text-[#c9d1d9] shadow-[0_0_16px_rgba(121,192,255,0.2)] select-none">
+        <button
+          type="button"
+          onClick={cycleMode}
+          className="px-2 py-0.5 rounded-full bg-[#0d1117] hover:bg-[#79c0ff]/20 text-[#79c0ff] border border-[#30363d] transition"
+          title="Click to switch how floating electrons react to your mouse cursor"
+        >
+          CURSOR: {cursorMode.toUpperCase()}
+        </button>
+        <button
+          type="button"
+          onClick={cycleSpeed}
+          className="px-2 py-0.5 rounded-full bg-[#0d1117] hover:bg-[#d2a8ff]/20 text-[#d2a8ff] border border-[#30363d] transition"
+          title="Click to change electron drift velocity"
+        >
+          SPEED: {speedMult.toFixed(1)}x
+        </button>
+        <button
+          type="button"
+          onClick={() => burstTriggerRef.current?.()}
+          className="px-2 py-0.5 rounded-full bg-[#2ea043]/20 hover:bg-[#2ea043]/35 text-[#56d364] border border-[#2ea043]/50 inline-flex items-center gap-1 transition"
+          title="Spawn an electromagnetic shockwave and electron burst (or click anywhere on the background)"
+        >
+          <Zap className="w-2.5 h-2.5" />
+          BURST ({electronCount})
+        </button>
+      </div>
+    </>
   );
 };
 
 /**
  * 2. GradeGuide TerminalBackground Component
- * Faded background live terminal stream in bottom corner.
  */
 export const TerminalBackground: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([
@@ -339,8 +536,8 @@ export const TerminalBackground: React.FC = () => {
     const interval = setInterval(() => {
       const randomCmd = commands[Math.floor(Math.random() * commands.length)];
       const timestamp = new Date().toISOString().split('T')[1].substring(0, 8);
-      setLogs((prev) => [...prev.slice(-11), `> [${timestamp}] ${randomCmd}`]);
-    }, 1500);
+      setLogs((prev) => [...prev.slice(-8), `> [${timestamp}] ${randomCmd}`]);
+    }, 1800);
 
     return () => clearInterval(interval);
   }, []);
@@ -355,13 +552,13 @@ export const TerminalBackground: React.FC = () => {
 };
 
 /**
- * 3. GradeGuide TypewriterText Component with Blinking Block Cursor (`█`)
+ * 3. GradeGuide TypewriterText Component with Continuous Loop & Blinking Block Cursor (`█`)
  */
 export const TypewriterText: React.FC<{
   text: string;
   delay?: number;
   className?: string;
-}> = ({ text, delay = 32, className = '' }) => {
+}> = ({ text, delay = 35, className = '' }) => {
   const [currentText, setCurrentText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -372,6 +569,13 @@ export const TypewriterText: React.FC<{
         setCurrentIndex((prev) => prev + 1);
       }, delay);
       return () => clearTimeout(timeout);
+    } else {
+      // Loop typewriter animation every 12 seconds so it stays alive
+      const resetTimer = setTimeout(() => {
+        setCurrentText('');
+        setCurrentIndex(0);
+      }, 12000);
+      return () => clearTimeout(resetTimer);
     }
   }, [currentIndex, delay, text]);
 
@@ -386,7 +590,7 @@ export const TypewriterText: React.FC<{
 };
 
 /**
- * 4. GradeGuide MagneticButton Component (Pulls Toward Cursor on Hover)
+ * 4. GradeGuide MagneticButton Component
  */
 export const MagneticButton: React.FC<{
   children: React.ReactNode;
@@ -411,7 +615,7 @@ export const MagneticButton: React.FC<{
     const rect = ref.current.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
-    setPosition({ x: x * 0.28, y: y * 0.28 });
+    setPosition({ x: x * 0.32, y: y * 0.32 });
   };
 
   const handleMouseLeave = () => {
@@ -442,7 +646,7 @@ export const MagneticButton: React.FC<{
 };
 
 /**
- * 5. GradeGuide ScoreRing Animated SVG Circular Gauge
+ * 5. GradeGuide ScoreRing Animated SVG Circular Gauge with Levitation & Orbiting Ring
  */
 export const ScoreRing: React.FC<{
   score: number;
@@ -455,7 +659,7 @@ export const ScoreRing: React.FC<{
   score,
   label,
   sublabel,
-  size = 86,
+  size = 94,
   strokeWidth = 7,
   color,
 }) => {
@@ -472,13 +676,28 @@ export const ScoreRing: React.FC<{
       : '#f85149');
 
   return (
-    <div className="flex items-center gap-3.5">
-      <div style={{ position: 'relative', width: size, height: size }} className="shrink-0">
+    <div className="flex items-center gap-3.5 float-anim-2">
+      <div
+        style={{ position: 'relative', width: size, height: size }}
+        className="shrink-0"
+      >
         <svg
           width={size}
           height={size}
           style={{ transform: 'rotate(-90deg)' }}
         >
+          {/* Outer rotating orbital ring */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius + 2}
+            stroke={activeColor}
+            strokeOpacity="0.25"
+            strokeWidth={1}
+            strokeDasharray="4 4"
+            fill="none"
+            className="orbit-cw"
+          />
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -521,15 +740,20 @@ export const ScoreRing: React.FC<{
 };
 
 /**
- * 6. GradeGuide ActivityHeatmap (GitHub-Style 90-Day Threat & Flow Inspection Matrix)
+ * 6. Interactive GradeGuide ActivityHeatmap (Click Any Cell to Inspect Window Details!)
  */
 export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
   totalEvents,
 }) => {
+  const [selectedCell, setSelectedCell] = useState<{
+    index: number;
+    level: number;
+    flows: number;
+  } | null>(null);
+
   const cells = useMemo(() => {
-    // Deterministic 7x18 matrix seeded by totalEvents so it reflects live session growth
     return Array.from({ length: 7 * 18 }, (_, idx) => {
-      const v = ((idx * 17 + totalEvents * 3) % 11);
+      const v = (idx * 17 + totalEvents * 3) % 11;
       if (idx > 118) return Math.min(4, Math.max(2, (totalEvents % 4) + 1));
       if (v < 5) return 0;
       if (v < 7) return 1;
@@ -549,21 +773,29 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
 
   return (
     <div className="bg-[#0d1117] p-4 space-y-2.5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-heading font-semibold text-[#c9d1d9] flex items-center gap-2">
-          <Activity className="w-3.5 h-3.5 text-[#79c0ff]" />
+          <Activity className="w-3.5 h-3.5 text-[#39d353]" />
           Network Flow Inspection & Threat Triage Activity (90-Day Telemetry Matrix)
         </h3>
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#8b949e]">
-          <span>Less</span>
-          {[0, 1, 2, 3, 4].map((lv) => (
-            <span
-              key={lv}
-              style={{ background: getColor(lv) }}
-              className="w-2.5 h-2.5 rounded-[2px] inline-block border border-white/5"
-            />
-          ))}
-          <span>More</span>
+          {selectedCell ? (
+            <span className="text-[#56d364]">
+              Window #{selectedCell.index + 1}: {selectedCell.flows} flows verified (Level {selectedCell.level}/4)
+            </span>
+          ) : (
+            <>
+              <span>Less</span>
+              {[0, 1, 2, 3, 4].map((lv) => (
+                <span
+                  key={lv}
+                  style={{ background: getColor(lv) }}
+                  className="w-2.5 h-2.5 rounded-[2px] inline-block border border-white/5"
+                />
+              ))}
+              <span>More</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -577,18 +809,29 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
         className="overflow-x-auto pb-1"
       >
         {cells.map((val, i) => (
-          <div
+          <button
+            type="button"
             key={i}
+            onClick={() =>
+              setSelectedCell({
+                index: i,
+                level: val,
+                flows: val * 18 + (i % 7),
+              })
+            }
             style={{
               width: '12px',
               height: '12px',
               background: getColor(val),
               borderRadius: '2px',
-              outline: '1px solid rgba(255,255,255,0.05)',
+              outline:
+                selectedCell?.index === i
+                  ? '1.5px solid #79c0ff'
+                  : '1px solid rgba(255,255,255,0.05)',
               outlineOffset: '-1px',
             }}
-            className="hover:scale-125 transition-transform"
-            title={`Telemetry Window #${i + 1}: ${val * 18} flows verified`}
+            className="hover:scale-150 transition-transform cursor-pointer"
+            title={`Click to inspect Window #${i + 1}: ${val * 18} flows verified`}
           />
         ))}
       </div>
@@ -597,7 +840,7 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
 };
 
 /**
- * 7. Zero-Thrash Cursor Spotlight Engine (Updates ONLY the single card under the pointer!)
+ * 7. Zero-Thrash Cursor Spotlight Engine
  */
 export const useGlobalGlassCursorEngine = () => {
   useEffect(() => {
@@ -634,7 +877,7 @@ export const useGlobalGlassCursorEngine = () => {
 };
 
 /**
- * 8. Smooth JavaScript Ease-Out Counter Hook for Live Telemetry Numbers
+ * 8. Smooth JavaScript Ease-Out Counter Hook
  */
 export const AnimatedMetric: React.FC<{
   value: number;

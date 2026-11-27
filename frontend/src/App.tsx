@@ -30,6 +30,7 @@ import { TriageBadge } from './components/Badge';
 import {
   AegisLogo,
   ElectronCanvasBackground,
+  FloatingSentinelDrone,
   MagneticButton,
   TerminalBackground,
   TypewriterText,
@@ -218,9 +219,10 @@ export const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden text-[#c9d1d9] flex flex-col relative">
-      {/* GradeGuide Multiplied Excited Star/Electron Canvas + Blueprint Grid + Faded Live Terminal Background */}
+      {/* GradeGuide Multiplied Excited Star/Electron Canvas + Blueprint Grid + Sentinel Flyer + Live Terminal */}
       <ElectronCanvasBackground />
       <div className="blueprint-grid" />
+      <FloatingSentinelDrone />
       <TerminalBackground />
 
       {/* Main Locked Console Area (Sidebar + Right Viewport; neither sidebar nor top bar scrolls away) */}
