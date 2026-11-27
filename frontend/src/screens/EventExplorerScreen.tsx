@@ -52,6 +52,7 @@ export const EventExplorerScreen: React.FC<Props> = ({
     nftables_command: string;
     zeek_hunt_query: string;
   } | null>(null);
+  const [showRules, setShowRules] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const [reviewStatusInput, setReviewStatusInput] =
@@ -486,62 +487,72 @@ export const EventExplorerScreen: React.FC<Props> = ({
                 {detailEvent.rationale_text}
               </div>
 
-              {/* Automated Defensive Mitigation & Hunting Rules Generator */}
+              {/* Collapsible Defensive Mitigation & Hunting Rules Generator */}
               {mitigationRules && (
-                <div className="p-3 rounded-[2px] bg-[#090c10] border border-white/[0.08] space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                    <span className="inline-flex items-center gap-1.5 font-semibold text-slate-200">
-                      <Terminal className="w-3 h-3" />
-                      DEFENSIVE RULESET SYNTHESIS
+                <div className="rounded-[4px] bg-[#090c10] border border-white/[0.08] p-2.5 space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowRules((prev) => !prev)}
+                    className="w-full flex items-center justify-between text-xs font-mono text-slate-200 hover:text-white"
+                  >
+                    <span className="inline-flex items-center gap-1.5 font-medium">
+                      <Terminal className="w-3.5 h-3.5 text-[#79c0ff]" />
+                      Defensive Rules (Suricata / nftables / Zeek)
                     </span>
-                    <span>[CLICK TO COPY]</span>
-                  </div>
+                    <span className="text-[10px] text-[#79c0ff]">
+                      {showRules ? 'Hide' : 'Show'}
+                    </span>
+                  </button>
 
-                  {[
-                    {
-                      key: 'suricata',
-                      label: 'SURICATA_IDS_RULE',
-                      val: mitigationRules.suricata_rule,
-                    },
-                    {
-                      key: 'nft',
-                      label: 'NFTABLES_DROP_CMD',
-                      val: mitigationRules.nftables_command,
-                    },
-                    {
-                      key: 'zeek',
-                      label: 'ZEEK_CONN_LOG_FILTER',
-                      val: mitigationRules.zeek_hunt_query,
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.key}
-                      className="p-2 rounded-[2px] bg-[#0d1117] border border-white/[0.06] space-y-1"
-                    >
-                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
-                        <span>{item.label}</span>
-                        <button
-                          type="button"
-                          onClick={() => copyRule(item.key, item.val)}
-                          className="text-slate-300 hover:text-white inline-flex items-center gap-1"
+                  {showRules && (
+                    <div className="space-y-2 pt-1">
+                      {[
+                        {
+                          key: 'suricata',
+                          label: 'Suricata IDS',
+                          val: mitigationRules.suricata_rule,
+                        },
+                        {
+                          key: 'nft',
+                          label: 'nftables Drop',
+                          val: mitigationRules.nftables_command,
+                        },
+                        {
+                          key: 'zeek',
+                          label: 'Zeek Filter',
+                          val: mitigationRules.zeek_hunt_query,
+                        },
+                      ].map((item) => (
+                        <div
+                          key={item.key}
+                          className="p-2 rounded-[2px] bg-[#0d1117] border border-white/[0.06] space-y-1"
                         >
-                          {copiedKey === item.key ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-400" />{' '}
-                              COPIED
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3" /> COPY
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <div className="text-[11px] font-mono text-slate-300 break-all">
-                        {item.val}
-                      </div>
+                          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                            <span>{item.label}</span>
+                            <button
+                              type="button"
+                              onClick={() => copyRule(item.key, item.val)}
+                              className="text-[#79c0ff] hover:text-white inline-flex items-center gap-1"
+                            >
+                              {copiedKey === item.key ? (
+                                <>
+                                  <Check className="w-3 h-3 text-emerald-400" />{' '}
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3" /> Copy
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-300 break-all">
+                            {item.val}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
 

@@ -218,10 +218,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden text-[#c9d1d9] flex flex-col relative">
-      {/* GradeGuide Multiplied Excited Star/Electron Canvas + Blueprint Grid + Faded Live Terminal Background */}
+      {/* GradeGuide Multiplied Excited Star/Electron Canvas + Blueprint Grid */}
       <ElectronCanvasBackground />
       <div className="blueprint-grid" />
-      <TerminalBackground />
 
       {/* Main Locked Console Area (Sidebar + Right Viewport; neither sidebar nor top bar scrolls away) */}
       <div className="flex-1 flex min-h-0 overflow-hidden relative z-10">
@@ -398,16 +397,9 @@ export const App: React.FC = () => {
               </button>
 
               <div className="flex items-center gap-2.5">
-                <h1 className="text-sm font-heading font-bold holographic-text uppercase tracking-wide">
+                <h1 className="text-base font-heading font-bold holographic-text tracking-wide">
                   {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
                 </h1>
-                <span className="text-[11px] font-mono text-[#8b949e] hidden xl:inline">
-                  //{' '}
-                  <TypewriterText
-                    text="Calibrated RF + Isolation Forest Open-Set Triage + TreeSHAP"
-                    delay={28}
-                  />
-                </span>
               </div>
             </div>
 
@@ -545,33 +537,17 @@ export const App: React.FC = () => {
       </div>
 
       {/* Locked Bottom Terminal Status Bar */}
-      <footer className="h-7 bg-[#090c10] border-t border-white/[0.08] px-4 flex items-center justify-between text-[10px] font-mono text-slate-400 select-none shrink-0 z-20">
+      <footer className="h-7 bg-[#090c10] border-t border-white/[0.08] px-5 flex items-center justify-between text-[11px] font-mono text-slate-400 select-none shrink-0 z-20">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 text-emerald-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            ENGINE_ONLINE
+            Online
           </span>
-          <span className="hidden sm:inline">
-            MODEL: {overview?.system_health?.active_model_version || '—'}
-          </span>
-          <span className="hidden md:inline">
-            XAI: TreeSHAP (Additive Path Decomposition)
-          </span>
-          <span className="hidden lg:inline">
-            P95_LATENCY:{' '}
-            {overview?.system_health?.p95_latency_ms?.toFixed(1) || '0.0'} ms
-          </span>
-          <span className="hidden lg:inline">
-            PSI_MAX:{' '}
-            {overview?.system_health?.max_drift_psi?.toFixed(4) || '0.0000'}
+          <span className="text-slate-500">
+            {overview?.system_health?.active_model_version || 'v1.0'}
           </span>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="hidden sm:inline text-slate-500">
-            KEYS: [1-8] NAV // [ [ ] SIDEBAR // [CTRL+K] CMD
-          </span>
-          <span className="text-slate-300">{utcClock}</span>
-        </div>
+        <span className="text-slate-400">{utcClock}</span>
       </footer>
 
       {/* Command Palette Modal (Ctrl+K) */}

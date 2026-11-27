@@ -27,6 +27,7 @@ export const ModelLabScreen: React.FC<Props> = ({ onModelTrained }) => {
   const [ifTrees, setIfTrees] = useState(150);
   const [seed, setSeed] = useState(42);
   const [training, setTraining] = useState(false);
+  const [showAuditNotes, setShowAuditNotes] = useState(false);
 
   const loadModels = async () => {
     const res = await aegisApi.getModelsLab();
@@ -398,58 +399,54 @@ export const ModelLabScreen: React.FC<Props> = ({ onModelTrained }) => {
         </div>
       </div>
 
-      {/* EDA, Leakage Prevention & Limitations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-4">
-          <div className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-sky-400" />
-            <h3 className="text-sm font-semibold text-slate-200">
-              Exploratory Data Analysis (EDA) & Leakage Prevention Audit
-            </h3>
-          </div>
-          <div className="text-xs font-mono text-slate-400">
-            Total Clean Flows: {eda.total_clean_rows} | Imbalance Ratio (Max:Min):{' '}
-            {eda.imbalance_ratio_max_to_min}:1
-          </div>
-          <div className="space-y-1.5 text-xs text-slate-300">
-            {eda.leakage_prevention_notes.map((note, idx) => (
-              <div
-                key={idx}
-                className="p-2 rounded bg-[#161b22]/70 border border-[#21262d]"
-              >
-                • {note}
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Collapsible EDA, Leakage Prevention & Limitations Drawer */}
+      <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-4">
+        <button
+          type="button"
+          onClick={() => setShowAuditNotes((prev) => !prev)}
+          className="w-full flex items-center justify-between text-xs font-mono text-slate-300 hover:text-white"
+        >
+          <span className="flex items-center gap-2 font-semibold">
+            <Database className="w-4 h-4 text-[#79c0ff]" />
+            EDA Leakage Audit & Model Comparison Notes ({eda.total_clean_rows}{' '}
+            Flows)
+          </span>
+          <span className="text-[#79c0ff]">
+            {showAuditNotes ? 'Hide Notes' : 'Show Notes'}
+          </span>
+        </button>
 
-        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-5 space-y-4">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
-            <h3 className="text-sm font-semibold text-slate-200">
-              Model Comparison & Documented Scientific Limitations
-            </h3>
-          </div>
-          <div className="space-y-2 text-xs">
-            {activeModel.metrics.model_comparison.map((mc) => (
-              <div
-                key={mc.model_name}
-                className="p-2.5 rounded bg-[#161b22]/70 border border-[#21262d] space-y-1"
-              >
-                <div className="flex justify-between font-mono">
-                  <span className="text-slate-200 font-semibold">
-                    {mc.model_name}
-                  </span>
-                  <span className="text-sky-300">{mc.headline_metric}</span>
+        {showAuditNotes && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 pt-4 border-t border-white/10">
+            <div className="space-y-2 text-xs text-slate-300">
+              {eda.leakage_prevention_notes.map((note, idx) => (
+                <div
+                  key={idx}
+                  className="p-2.5 rounded bg-[#161b22]/70 border border-[#21262d]"
+                >
+                  • {note}
                 </div>
-                <p className="text-slate-400 text-[11px]">{mc.strengths}</p>
-                <p className="text-amber-300/90 text-[11px]">
-                  Limitation: {mc.limitations}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <div className="space-y-2 text-xs">
+              {activeModel.metrics.model_comparison.map((mc) => (
+                <div
+                  key={mc.model_name}
+                  className="p-2.5 rounded bg-[#161b22]/70 border border-[#21262d] space-y-1"
+                >
+                  <div className="flex justify-between font-mono">
+                    <span className="text-slate-200 font-semibold">
+                      {mc.model_name}
+                    </span>
+                    <span className="text-sky-300">{mc.headline_metric}</span>
+                  </div>
+                  <p className="text-slate-400 text-[11px]">{mc.strengths}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
