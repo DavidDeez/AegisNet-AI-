@@ -25,6 +25,7 @@ import { ModelLabScreen } from './screens/ModelLabScreen';
 import { MonitoringScreen } from './screens/MonitoringScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { TriageBadge } from './components/Badge';
+import { useGlobalGlassCursorEngine } from './components/InteractiveEffects';
 
 const NAV_ITEMS = [
   { id: 'overview', key: '1', label: 'Overview', icon: LayoutDashboard },
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
 ];
 
 export const App: React.FC = () => {
+  useGlobalGlassCursorEngine();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [threatIntel, setThreatIntel] = useState<ThreatIntelResponse | null>(

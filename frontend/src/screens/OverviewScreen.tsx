@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import type { OverviewResponse } from '../types/aegis';
+import type { NetworkEventRecord, OverviewResponse } from '../types/aegis';
 import { ReviewBadge, SeverityBadge, TriageBadge } from '../components/Badge';
+import { AnimatedMetric, FlowHoverHud } from '../components/InteractiveEffects';
 
 interface Props {
   data: OverviewResponse | null;
@@ -16,6 +17,17 @@ export const OverviewScreen: React.FC<Props> = ({
   onInspectEvent,
   onNavigate,
 }) => {
+  const [hoveredEvent, setHoveredEvent] = useState<NetworkEventRecord | null>(
+    null
+  );
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
+  const [highlightedSegment, setHighlightedSegment] = useState<string | null>(
+    null
+  );
+
   if (loading && !data) {
     return (
       <div className="p-6 text-xs text-slate-400 font-mono">
@@ -64,37 +76,55 @@ export const OverviewScreen: React.FC<Props> = ({
 
   return (
     <div className="space-y-4">
-      {/* Unified Horizontal Telemetry Ledger (Replaces AI-Style 5 Floating Icon Cards) */}
+      {/* Floating Cursor-Following Forensic HUD Popover */}
+      <FlowHoverHud
+        event={hoveredEvent}
+        x={cursorPos.x}
+        y={cursorPos.y}
+      />
+
+      {/* Unified Horizontal Telemetry Ledger with Interactive Segment Highlight */}
       <div className="bg-[#0d1117] border border-white/10 rounded overflow-hidden">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.07]">
-          <div className="p-4 space-y-1">
+          <div
+            onMouseEnter={() => setHighlightedSegment('ALL')}
+            onMouseLeave={() => setHighlightedSegment(null)}
+            onClick={() => onNavigate('events')}
+            className="p-4 space-y-1 interactive-ledger-cell cursor-pointer"
+          >
             <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
               <span>01 // INGESTED FLOWS</span>
               <span className="text-slate-500">TOTAL</span>
             </div>
             <div className="flex items-baseline justify-between pt-0.5">
               <span className="text-2xl font-mono font-semibold text-white">
-                {data.total_events.toLocaleString()}
+                <AnimatedMetric value={data.total_events} />
               </span>
               <span className="text-[11px] font-mono text-amber-300/90">
-                {data.pending_triage} queued
+                <AnimatedMetric value={data.pending_triage} suffix=" queued" />
               </span>
             </div>
             <div className="text-[10px] font-mono text-slate-500">
-              Mean IF Percentile: p{data.avg_anomaly_percentile.toFixed(1)}
+              Mean IF Percentile: p
+              <AnimatedMetric value={data.avg_anomaly_percentile} decimals={1} />
             </div>
           </div>
 
-          <div className="p-4 space-y-1">
+          <div
+            onMouseEnter={() => setHighlightedSegment('KNOWN_ATTACK')}
+            onMouseLeave={() => setHighlightedSegment(null)}
+            onClick={() => onNavigate('events')}
+            className="p-4 space-y-1 interactive-ledger-cell cursor-pointer"
+          >
             <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
               <span>02 // KNOWN SIGNATURES</span>
               <span className="text-red-400 font-semibold">
-                {knownPct.toFixed(1)}%
+                <AnimatedMetric value={knownPct} decimals={1} suffix="%" />
               </span>
             </div>
             <div className="flex items-baseline justify-between pt-0.5">
               <span className="text-2xl font-mono font-semibold text-red-300">
-                {data.known_attacks.toLocaleString()}
+                <AnimatedMetric value={data.known_attacks} />
               </span>
               <span className="text-[11px] font-mono text-slate-400">
                 P̄={(data.avg_confidence * 100).toFixed(1)}%
@@ -105,16 +135,21 @@ export const OverviewScreen: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="p-4 space-y-1">
+          <div
+            onMouseEnter={() => setHighlightedSegment('ANOMALOUS_UNKNOWN')}
+            onMouseLeave={() => setHighlightedSegment(null)}
+            onClick={() => onNavigate('threat-intel')}
+            className="p-4 space-y-1 interactive-ledger-cell cursor-pointer"
+          >
             <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
               <span>03 // OPEN-SET ANOMALIES</span>
               <span className="text-amber-300 font-semibold">
-                {anomPct.toFixed(1)}%
+                <AnimatedMetric value={anomPct} decimals={1} suffix="%" />
               </span>
             </div>
             <div className="flex items-baseline justify-between pt-0.5">
               <span className="text-2xl font-mono font-semibold text-amber-200">
-                {data.anomalous_unknown.toLocaleString()}
+                <AnimatedMetric value={data.anomalous_unknown} />
               </span>
               <span className="text-[11px] font-mono text-slate-400">
                 IF ≥ p95.0
@@ -125,16 +160,21 @@ export const OverviewScreen: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="p-4 space-y-1">
+          <div
+            onMouseEnter={() => setHighlightedSegment('UNCERTAIN')}
+            onMouseLeave={() => setHighlightedSegment(null)}
+            onClick={() => onNavigate('threat-intel')}
+            className="p-4 space-y-1 interactive-ledger-cell cursor-pointer"
+          >
             <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
               <span>04 // HIGH-ENTROPY QUEUE</span>
               <span className="text-sky-300 font-semibold">
-                {uncPct.toFixed(1)}%
+                <AnimatedMetric value={uncPct} decimals={1} suffix="%" />
               </span>
             </div>
             <div className="flex items-baseline justify-between pt-0.5">
               <span className="text-2xl font-mono font-semibold text-sky-200">
-                {data.uncertain_events.toLocaleString()}
+                <AnimatedMetric value={data.uncertain_events} />
               </span>
               <span className="text-[11px] font-mono text-slate-400">
                 H̄={data.avg_entropy.toFixed(3)}
@@ -145,16 +185,20 @@ export const OverviewScreen: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="p-4 space-y-1">
+          <div
+            onMouseEnter={() => setHighlightedSegment('BENIGN')}
+            onMouseLeave={() => setHighlightedSegment(null)}
+            className="p-4 space-y-1 interactive-ledger-cell"
+          >
             <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-wider">
               <span>05 // BASELINE BENIGN</span>
               <span className="text-emerald-400 font-semibold">
-                {benignPct.toFixed(1)}%
+                <AnimatedMetric value={benignPct} decimals={1} suffix="%" />
               </span>
             </div>
             <div className="flex items-baseline justify-between pt-0.5">
               <span className="text-2xl font-mono font-semibold text-emerald-300">
-                {data.benign_events.toLocaleString()}
+                <AnimatedMetric value={data.benign_events} />
               </span>
               <span className="text-[11px] font-mono text-slate-400">
                 NOMINAL
@@ -166,30 +210,54 @@ export const OverviewScreen: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Proportional Traffic Composition Strip */}
+        {/* Interactive Proportional Traffic Composition Strip */}
         <div className="px-4 py-2 bg-[#090c10] border-t border-white/[0.07] flex items-center gap-3">
           <span className="text-[10px] font-mono text-slate-400 shrink-0">
             COMPOSITION
           </span>
-          <div className="h-1.5 flex-1 bg-slate-900 rounded-[1px] overflow-hidden flex">
+          <div className="h-2 flex-1 bg-slate-900 rounded-[1px] overflow-hidden flex gap-[1px]">
             <div
               style={{ width: `${knownPct}%` }}
-              className="bg-red-500 h-full"
+              className={`bg-red-500 h-full transition-all duration-300 ${
+                highlightedSegment &&
+                highlightedSegment !== 'ALL' &&
+                highlightedSegment !== 'KNOWN_ATTACK'
+                  ? 'opacity-25'
+                  : 'opacity-100'
+              }`}
               title={`Known Attacks: ${knownPct.toFixed(1)}%`}
             />
             <div
               style={{ width: `${anomPct}%` }}
-              className="bg-amber-400 h-full"
+              className={`bg-amber-400 h-full transition-all duration-300 ${
+                highlightedSegment &&
+                highlightedSegment !== 'ALL' &&
+                highlightedSegment !== 'ANOMALOUS_UNKNOWN'
+                  ? 'opacity-25'
+                  : 'opacity-100'
+              }`}
               title={`Open-Set Anomalies: ${anomPct.toFixed(1)}%`}
             />
             <div
               style={{ width: `${uncPct}%` }}
-              className="bg-sky-400 h-full"
+              className={`bg-sky-400 h-full transition-all duration-300 ${
+                highlightedSegment &&
+                highlightedSegment !== 'ALL' &&
+                highlightedSegment !== 'UNCERTAIN'
+                  ? 'opacity-25'
+                  : 'opacity-100'
+              }`}
               title={`High Entropy / Uncertain: ${uncPct.toFixed(1)}%`}
             />
             <div
               style={{ width: `${benignPct}%` }}
-              className="bg-emerald-500/75 h-full"
+              className={`bg-emerald-500/80 h-full transition-all duration-300 ${
+                highlightedSegment &&
+                highlightedSegment !== 'ALL' &&
+                highlightedSegment !== 'BENIGN'
+                  ? 'opacity-25'
+                  : 'opacity-100'
+              }`}
               title={`Benign Baseline: ${benignPct.toFixed(1)}%`}
             />
           </div>
@@ -221,7 +289,7 @@ export const OverviewScreen: React.FC<Props> = ({
                   CLASSIFICATION & TRIAGE LEDGER
                 </span>
                 <span className="text-[10px] font-mono text-slate-500">
-                  [GROUPED BY SIGNATURE & TAXONOMY]
+                  [HOVER TO HIGHLIGHT // CLICK TO FILTER]
                 </span>
               </div>
               <button
@@ -247,7 +315,15 @@ export const OverviewScreen: React.FC<Props> = ({
                 </thead>
                 <tbody className="divide-y divide-white/[0.05]">
                   {data.attack_class_breakdown.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-white/[0.03]">
+                    <tr
+                      key={idx}
+                      onMouseEnter={() =>
+                        setHighlightedSegment(row.triage_category)
+                      }
+                      onMouseLeave={() => setHighlightedSegment(null)}
+                      onClick={() => onNavigate('events')}
+                      className="cursor-pointer"
+                    >
                       <td className="py-2 px-4 font-medium text-slate-100">
                         {row.predicted_label}
                       </td>
@@ -286,7 +362,7 @@ export const OverviewScreen: React.FC<Props> = ({
 
         {/* Right Column: Severity Breakdown & Engine Benchmark Metrics (4 cols) */}
         <div className="lg:col-span-4 space-y-4">
-          <div className="bg-[#0d1117] border border-white/10 rounded">
+          <div className="bg-[#0d1117] interactive-tilt border border-white/10 rounded">
             <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between">
               <span className="text-xs font-mono font-semibold text-slate-200 tracking-wide">
                 SEVERITY ALLOCATION
@@ -312,7 +388,7 @@ export const OverviewScreen: React.FC<Props> = ({
                     </div>
                     <div className="h-1.5 w-full bg-[#07080c] rounded-[1px] overflow-hidden border border-white/[0.06]">
                       <div
-                        className={`h-full ${sev.color}`}
+                        className={`h-full transition-all duration-500 ${sev.color}`}
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
@@ -322,7 +398,7 @@ export const OverviewScreen: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="bg-[#0d1117] border border-white/10 rounded">
+          <div className="bg-[#0d1117] interactive-tilt border border-white/10 rounded">
             <div className="px-4 py-2.5 border-b border-white/[0.07] flex items-center justify-between">
               <span className="text-xs font-mono font-semibold text-slate-200 tracking-wide">
                 MODEL & CALIBRATION TELEMETRY
@@ -335,7 +411,7 @@ export const OverviewScreen: React.FC<Props> = ({
               </button>
             </div>
             <div className="grid grid-cols-2 divide-x divide-y divide-white/[0.07] text-xs font-mono">
-              <div className="p-3">
+              <div className="p-3 interactive-ledger-cell">
                 <div className="text-slate-500 text-[10px]">CLOSED-SET F1</div>
                 <div className="text-slate-100 font-semibold mt-0.5">
                   {data.active_model
@@ -343,7 +419,7 @@ export const OverviewScreen: React.FC<Props> = ({
                     : '—'}
                 </div>
               </div>
-              <div className="p-3">
+              <div className="p-3 interactive-ledger-cell">
                 <div className="text-slate-500 text-[10px]">OPEN-SET AUROC</div>
                 <div className="text-amber-200 font-semibold mt-0.5">
                   {data.active_model
@@ -351,7 +427,7 @@ export const OverviewScreen: React.FC<Props> = ({
                     : '—'}
                 </div>
               </div>
-              <div className="p-3">
+              <div className="p-3 interactive-ledger-cell">
                 <div className="text-slate-500 text-[10px]">CALIBRATION ECE</div>
                 <div className="text-slate-200 mt-0.5">
                   {data.active_model
@@ -359,7 +435,7 @@ export const OverviewScreen: React.FC<Props> = ({
                     : '—'}
                 </div>
               </div>
-              <div className="p-3">
+              <div className="p-3 interactive-ledger-cell">
                 <div className="text-slate-500 text-[10px]">MAX DRIFT PSI</div>
                 <div className="text-slate-200 mt-0.5">
                   {data.system_health.max_drift_psi.toFixed(4)}
@@ -370,7 +446,7 @@ export const OverviewScreen: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Bottom: Live Flow Inspection Stream */}
+      {/* Bottom: Live Flow Inspection Stream with Hover HUD Reticle */}
       <div className="bg-[#0d1117] border border-white/10 rounded">
         <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -378,7 +454,7 @@ export const OverviewScreen: React.FC<Props> = ({
               RECENT FLOW TELEMETRY LEDGER
             </span>
             <span className="text-[10px] font-mono text-slate-500">
-              [SELECT ROW FOR SHAP & MITIGATION DISPOSITION]
+              [HOVER ROW FOR LIVE HUD TELEMETRY // CLICK FOR FULL FORENSIC VIEW]
             </span>
           </div>
           <button
@@ -389,7 +465,10 @@ export const OverviewScreen: React.FC<Props> = ({
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div
+          className="overflow-x-auto"
+          onMouseLeave={() => setHoveredEvent(null)}
+        >
           <table className="w-full text-left border-collapse text-xs font-mono">
             <thead>
               <tr className="border-b border-white/[0.07] text-[10px] text-slate-400 bg-[#090c10]/60">
@@ -408,8 +487,18 @@ export const OverviewScreen: React.FC<Props> = ({
               {data.recent_events.map((ev) => (
                 <tr
                   key={ev.event_uid}
-                  onClick={() => onInspectEvent(ev.event_uid)}
-                  className="hover:bg-white/[0.04] cursor-pointer transition-colors"
+                  onMouseEnter={(e) => {
+                    setHoveredEvent(ev);
+                    setCursorPos({ x: e.clientX, y: e.clientY });
+                  }}
+                  onMouseMove={(e) => {
+                    setCursorPos({ x: e.clientX, y: e.clientY });
+                  }}
+                  onClick={() => {
+                    setHoveredEvent(null);
+                    onInspectEvent(ev.event_uid);
+                  }}
+                  className="cursor-pointer"
                 >
                   <td className="py-2 px-4 text-slate-200 font-medium">
                     {ev.event_uid}

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import type { ThreatIntelResponse } from '../types/aegis';
-import { TriageBadge } from '../components/Badge';
+import { SeverityBadge, TriageBadge } from '../components/Badge';
 
 interface Props {
   data: ThreatIntelResponse | null;
@@ -14,6 +14,13 @@ export const ThreatIntelScreen: React.FC<Props> = ({
   onInspectEvent,
 }) => {
   const [showSpec, setShowSpec] = useState(false);
+  const planeRef = useRef<HTMLDivElement | null>(null);
+  const [crosshair, setCrosshair] = useState<{
+    visible: boolean;
+    xPct: number;
+    yPct: number;
+  }>({ visible: false, xPct: 50, yPct: 50 });
+  const [hoveredPoint, setHoveredPoint] = useState<any | null>(null);
 
   if (loading && !data) {
     return (
@@ -38,6 +45,28 @@ export const ThreatIntelScreen: React.FC<Props> = ({
 
   const openSet = data.open_set_evaluation || {};
   const perFamily: Array<any> = openSet.per_family_detection || [];
+
+  const handlePlaneMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!planeRef.current) return;
+    const rect = planeRef.current.getBoundingClientRect();
+    const xPct = Math.max(
+      0,
+      Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)
+    );
+    const yPct = Math.max(
+      0,
+      Math.min(100, (1 - (e.clientY - rect.top) / rect.height) * 100)
+    );
+    setCrosshair({ visible: true, xPct, yPct });
+  };
+
+  const getQuadrantName = (xPct: number, yPct: number) => {
+    const entropy = yPct / 100;
+    if (xPct >= 95 && entropy >= 0.55) return 'OPEN_SET_HIGH_ENTROPY_OUTLIER';
+    if (xPct >= 95) return 'STRUCTURAL_IF_ANOMALY_ZONE';
+    if (entropy >= 0.55) return 'AMBIGUOUS_DECISION_BOUNDARY';
+    return 'CLOSED_SET_SUPERVISED_REGIME';
+  };
 
   return (
     <div className="space-y-4">
@@ -82,20 +111,50 @@ export const ThreatIntelScreen: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 2D Risk & Uncertainty Decision Plane + Held-Out Evaluation */}
+      {/* 2D Risk & Uncertainty Decision Plane with JavaScript Laser Crosshair Reticle */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-8 bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between">
-          <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
+          <div className="px-4 py-3 border-b border-white/[0.07] flex flex-wrap items-center justify-between gap-2 font-mono">
             <span className="text-xs font-semibold text-slate-200">
               DECISION PLANE // IF_ANOMALY_PERCENTILE (X) VS. SHANNON_ENTROPY (Y)
             </span>
-            <span className="text-[10px] text-slate-500">
-              [CLICK POINT TO INSPECT FLOW]
-            </span>
+            {crosshair.visible ? (
+              <span className="text-[10px] text-slate-300 bg-[#090c10] px-2 py-0.5 rounded-[2px] border border-white/10">
+                RETICLE // IF: p{crosshair.xPct.toFixed(1)} | H(p):{' '}
+                {(crosshair.yPct / 100).toFixed(3)} |{' '}
+                {getQuadrantName(crosshair.xPct, crosshair.yPct)}
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-500">
+                [MOVE CURSOR OVER PLANE FOR LIVE RETICLE]
+              </span>
+            )}
           </div>
 
           <div className="p-4">
-            <div className="relative h-72 w-full bg-[#07080c] border border-white/10 rounded-[2px] overflow-hidden">
+            <div
+              ref={planeRef}
+              onMouseMove={handlePlaneMouseMove}
+              onMouseLeave={() => {
+                setCrosshair((prev) => ({ ...prev, visible: false }));
+                setHoveredPoint(null);
+              }}
+              className="relative h-72 w-full bg-[#07080c] border border-white/10 rounded-[2px] overflow-hidden cursor-crosshair select-none"
+            >
+              {/* Dynamic JavaScript Laser Crosshairs */}
+              {crosshair.visible && (
+                <>
+                  <div
+                    className="absolute top-0 bottom-0 border-l border-white/20 pointer-events-none"
+                    style={{ left: `${crosshair.xPct}%` }}
+                  />
+                  <div
+                    className="absolute left-0 right-0 border-t border-white/20 pointer-events-none"
+                    style={{ bottom: `${crosshair.yPct}%` }}
+                  />
+                </>
+              )}
+
               {/* Threshold hairlines */}
               <div
                 className="absolute left-0 right-0 border-t border-dashed border-sky-400/35 pointer-events-none"
@@ -121,24 +180,65 @@ export const ThreatIntelScreen: React.FC<Props> = ({
                   3,
                   Math.min(97, pt.predictive_entropy * 100)
                 );
+                const isHovered = hoveredPoint?.event_uid === pt.event_uid;
                 const colorMap: Record<string, string> = {
-                  KNOWN_ATTACK: 'bg-red-500 border-red-300',
-                  ANOMALOUS_UNKNOWN: 'bg-amber-400 border-amber-200',
-                  UNCERTAIN: 'bg-sky-400 border-sky-200',
-                  BENIGN: 'bg-emerald-500/60 border-emerald-300/60',
+                  KNOWN_ATTACK: 'bg-red-500 border-red-200',
+                  ANOMALOUS_UNKNOWN: 'bg-amber-400 border-amber-100',
+                  UNCERTAIN: 'bg-sky-400 border-sky-100',
+                  BENIGN: 'bg-emerald-500/65 border-emerald-200/60',
                 };
                 return (
                   <button
                     key={pt.event_uid}
+                    onMouseEnter={() => setHoveredPoint(pt)}
                     onClick={() => onInspectEvent(pt.event_uid)}
-                    title={`${pt.event_uid} | ${pt.triage_category} (${pt.predicted_label})\nP(y|x): ${(pt.supervised_confidence * 100).toFixed(1)}% | H: ${pt.predictive_entropy.toFixed(3)} | IF: p${pt.anomaly_percentile.toFixed(1)}`}
                     style={{ left: `${xPct}%`, bottom: `${yPct}%` }}
-                    className={`absolute w-2 h-2 -ml-1 -mb-1 rounded-[1px] border transition-transform hover:scale-150 ${
-                      colorMap[pt.triage_category] || 'bg-slate-400'
-                    }`}
+                    className={`absolute w-2.5 h-2.5 -ml-1.25 -mb-1.25 rounded-[1px] border transition-transform ${
+                      isHovered
+                        ? 'scale-[2.2] z-20 ring-2 ring-white'
+                        : 'hover:scale-150 z-10'
+                    } ${colorMap[pt.triage_category] || 'bg-slate-400'}`}
                   />
                 );
               })}
+
+              {/* Floating Hovered Node Telemetry HUD Inside Decision Plane */}
+              {hoveredPoint && (
+                <div className="absolute top-3 left-3 z-30 glass-modal rounded-[3px] p-3 text-[11px] font-mono space-y-1.5 pointer-events-none w-72">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-1">
+                    <span className="text-white font-semibold">
+                      {hoveredPoint.event_uid}
+                    </span>
+                    <SeverityBadge severity={hoveredPoint.severity} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <TriageBadge category={hoveredPoint.triage_category} />
+                    <span className="text-slate-300">
+                      PORT: {hoveredPoint.dst_port}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 pt-1 text-[10px] border-t border-white/10">
+                    <div>
+                      <span className="text-slate-500 block">P(y|x)</span>
+                      <span className="text-slate-100">
+                        {(hoveredPoint.supervised_confidence * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">ENTROPY</span>
+                      <span className="text-sky-300">
+                        {hoveredPoint.predictive_entropy.toFixed(3)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">IF_PCTL</span>
+                      <span className="text-amber-300">
+                        p{hoveredPoint.anomaly_percentile.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -165,7 +265,7 @@ export const ThreatIntelScreen: React.FC<Props> = ({
         </div>
 
         {/* Held-Out Attack-Family Open-Set Benchmark (4 cols) */}
-        <div className="lg:col-span-4 bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-[#0d1117] interactive-tilt border border-white/10 rounded flex flex-col justify-between">
           <div>
             <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
               <span className="text-xs font-semibold text-slate-200">
@@ -175,7 +275,7 @@ export const ThreatIntelScreen: React.FC<Props> = ({
             </div>
 
             <div className="grid grid-cols-2 divide-x divide-b divide-white/[0.07] font-mono text-xs">
-              <div className="p-3">
+              <div className="p-3 interactive-ledger-cell">
                 <div className="text-[10px] text-slate-500">OPEN-SET AUROC</div>
                 <div className="text-lg font-semibold text-amber-200 mt-0.5">
                   {openSet.auroc !== undefined
@@ -183,7 +283,7 @@ export const ThreatIntelScreen: React.FC<Props> = ({
                     : '—'}
                 </div>
               </div>
-              <div className="p-3">
+              <div className="p-3 interactive-ledger-cell">
                 <div className="text-[10px] text-slate-500">OPEN-SET AUPRC</div>
                 <div className="text-lg font-semibold text-slate-100 mt-0.5">
                   {openSet.auprc !== undefined
@@ -250,7 +350,7 @@ export const ThreatIntelScreen: React.FC<Props> = ({
               </thead>
               <tbody className="divide-y divide-white/[0.05]">
                 {data.targeted_ports.map((p, i) => (
-                  <tr key={i} className="hover:bg-white/[0.03]">
+                  <tr key={i}>
                     <td className="py-2 px-4 text-slate-100">{p.dst_port}</td>
                     <td className="py-2 px-3 text-slate-400">{p.protocol}</td>
                     <td className="py-2 px-3">
@@ -289,7 +389,7 @@ export const ThreatIntelScreen: React.FC<Props> = ({
               </thead>
               <tbody className="divide-y divide-white/[0.05]">
                 {data.suspicious_sources.map((s, i) => (
-                  <tr key={i} className="hover:bg-white/[0.03]">
+                  <tr key={i}>
                     <td className="py-2 px-4 text-slate-200">{s.src_ip}</td>
                     <td className="py-2 px-3 text-right text-slate-200">
                       {s.event_count}

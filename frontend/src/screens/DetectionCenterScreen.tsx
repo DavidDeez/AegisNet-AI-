@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Upload, Play, Sliders, AlertCircle, FileSpreadsheet } from 'lucide-react';
 import { aegisApi } from '../api/client';
-import type { DetectionBatchResult } from '../types/aegis';
+import type { DetectionBatchResult, NetworkEventRecord } from '../types/aegis';
 import { SeverityBadge, TriageBadge } from '../components/Badge';
+import { FlowHoverHud } from '../components/InteractiveEffects';
 
 interface Props {
   onBatchAnalyzed: () => void;
@@ -198,6 +199,13 @@ export const DetectionCenterScreen: React.FC<Props> = ({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<DetectionBatchResult | null>(null);
+  const [hoveredEvent, setHoveredEvent] = useState<NetworkEventRecord | null>(
+    null
+  );
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
 
   const handlePresetChange = (key: string) => {
     setSelectedPreset(key);
@@ -261,6 +269,11 @@ export const DetectionCenterScreen: React.FC<Props> = ({
 
   return (
     <div className="space-y-4">
+      <FlowHoverHud
+        event={hoveredEvent}
+        x={cursorPos.x}
+        y={cursorPos.y}
+      />
       {error && (
         <div className="bg-red-950/50 border border-red-500/40 rounded-[3px] p-3 flex items-center gap-2.5 text-xs font-mono text-red-200">
           <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
@@ -273,7 +286,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
         {/* CSV Capture Ingest */}
         <form
           onSubmit={handleUploadCsv}
-          className="bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between"
+          className="bg-[#0d1117] interactive-tilt border border-white/10 rounded flex flex-col justify-between"
         >
           <div>
             <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
@@ -328,7 +341,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
         </form>
 
         {/* Holdout Benchmark Slice */}
-        <div className="bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between">
+        <div className="bg-[#0d1117] interactive-tilt border border-white/10 rounded flex flex-col justify-between">
           <div>
             <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
               <span className="text-xs font-semibold text-slate-200">
@@ -394,7 +407,7 @@ export const DetectionCenterScreen: React.FC<Props> = ({
         {/* Single-Flow Vector Probe */}
         <form
           onSubmit={handleAnalyzeSingleFlow}
-          className="bg-[#0d1117] border border-white/10 rounded flex flex-col justify-between"
+          className="bg-[#0d1117] interactive-tilt border border-white/10 rounded flex flex-col justify-between"
         >
           <div>
             <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between font-mono">
@@ -573,7 +586,10 @@ export const DetectionCenterScreen: React.FC<Props> = ({
             </div>
           )}
 
-          <div className="overflow-x-auto mt-2">
+          <div
+            className="overflow-x-auto mt-2"
+            onMouseLeave={() => setHoveredEvent(null)}
+          >
             <table className="w-full text-left border-collapse text-xs font-mono">
               <thead>
                 <tr className="border-b border-white/[0.07] text-[10px] text-slate-400 bg-[#090c10]/60">
@@ -593,8 +609,18 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                 {result.events.slice(0, 40).map((ev) => (
                   <tr
                     key={ev.event_uid}
-                    onClick={() => onInspectEvent(ev.event_uid)}
-                    className="hover:bg-white/[0.04] cursor-pointer"
+                    onMouseEnter={(e) => {
+                      setHoveredEvent(ev);
+                      setCursorPos({ x: e.clientX, y: e.clientY });
+                    }}
+                    onMouseMove={(e) => {
+                      setCursorPos({ x: e.clientX, y: e.clientY });
+                    }}
+                    onClick={() => {
+                      setHoveredEvent(null);
+                      onInspectEvent(ev.event_uid);
+                    }}
+                    className="cursor-pointer"
                   >
                     <td className="py-2 px-4 text-slate-200 font-medium">
                       {ev.event_uid}
