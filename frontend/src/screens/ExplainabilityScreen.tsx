@@ -104,27 +104,31 @@ export const ExplainabilityScreen: React.FC<Props> = ({
           </div>
 
           <div className="p-3 space-y-2 max-h-[640px] overflow-y-auto">
-            {globalData?.global_importance.slice(0, 14).map((item) => {
+            {globalData?.global_importance.slice(0, 16).map((item) => {
               const barPct = (item.mean_abs_shap / maxGlobalShap) * 100;
               return (
                 <div
                   key={item.feature}
-                  title={`${item.description} (Train Median: ${item.train_median})`}
-                  className="p-2.5 rounded-[4px] bg-[#090c10] border border-white/[0.06] space-y-1.5"
+                  className="p-2.5 rounded-[2px] bg-[#090c10] border border-white/[0.06] space-y-1.5"
                 >
                   <div className="flex items-center justify-between text-xs font-mono">
                     <span className="text-slate-200 font-medium">
-                      {String(item.rank).padStart(2, '0')}. {item.feature}
+                      {String(item.rank).padStart(2, '0')} // {item.feature}
                     </span>
-                    <span className="text-[#79c0ff] text-[11px]">
-                      {item.mean_abs_shap.toFixed(4)}
+                    <span className="text-slate-300 text-[11px]">
+                      |φ|: {item.mean_abs_shap.toFixed(4)} // G:{' '}
+                      {item.gini_importance.toFixed(3)}
                     </span>
                   </div>
-                  <div className="h-1.5 w-full bg-[#07080c] rounded-full overflow-hidden">
+                  <div className="h-1 w-full bg-[#07080c] rounded-[1px] overflow-hidden">
                     <div
-                      className="h-full bg-[#79c0ff]"
+                      className="h-full bg-slate-300"
                       style={{ width: `${Math.min(100, barPct)}%` }}
                     />
+                  </div>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                    <span className="truncate pr-2">{item.description}</span>
+                    <span className="shrink-0">MED: {item.train_median}</span>
                   </div>
                 </div>
               );

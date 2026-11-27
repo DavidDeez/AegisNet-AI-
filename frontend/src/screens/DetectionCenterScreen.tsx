@@ -592,17 +592,21 @@ export const DetectionCenterScreen: React.FC<Props> = ({
           >
             <table className="w-full text-left border-collapse text-xs font-mono">
               <thead>
-                <tr className="border-b border-white/[0.07] text-[11px] text-[#8b949e] bg-[#090c10]/60">
-                  <th className="py-2.5 px-4">Event</th>
-                  <th className="py-2.5 px-3">Endpoints</th>
-                  <th className="py-2.5 px-3">Triage</th>
-                  <th className="py-2.5 px-3">Class</th>
-                  <th className="py-2.5 px-3">Severity</th>
-                  <th className="py-2.5 px-4 text-right">Confidence</th>
+                <tr className="border-b border-white/[0.07] text-[10px] text-slate-400 bg-[#090c10]/60">
+                  <th className="py-2 px-4">EVENT UID</th>
+                  <th className="py-2 px-3">ENDPOINTS</th>
+                  <th className="py-2 px-3">TRIAGE STATE</th>
+                  <th className="py-2 px-3">CLASSIFICATION</th>
+                  <th className="py-2 px-3">TRUTH_LABEL</th>
+                  <th className="py-2 px-3">SEV</th>
+                  <th className="py-2 px-3 text-right">P(y|x)</th>
+                  <th className="py-2 px-3 text-right">ENTROPY</th>
+                  <th className="py-2 px-3 text-right">IF_SCORE</th>
+                  <th className="py-2 px-4">ATTRIBUTION SUMMARY</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.05]">
-                {result.events.slice(0, 25).map((ev) => (
+                {result.events.slice(0, 40).map((ev) => (
                   <tr
                     key={ev.event_uid}
                     onMouseEnter={(e) => {
@@ -618,23 +622,36 @@ export const DetectionCenterScreen: React.FC<Props> = ({
                     }}
                     className="cursor-pointer"
                   >
-                    <td className="py-2.5 px-4 text-[#79c0ff] font-medium">
+                    <td className="py-2 px-4 text-slate-200 font-medium">
                       {ev.event_uid}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300">
+                    <td className="py-2 px-3 text-slate-300">
                       {ev.src_ip} → {ev.dst_ip}:{ev.dst_port}
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2 px-3">
                       <TriageBadge category={ev.triage_category} />
                     </td>
-                    <td className="py-2.5 px-3 text-slate-100">
+                    <td className="py-2 px-3 text-slate-100">
                       {ev.predicted_label}
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2 px-3 text-slate-400">
+                      {ev.ground_truth_label || '—'}
+                    </td>
+                    <td className="py-2 px-3">
                       <SeverityBadge severity={ev.severity} />
                     </td>
-                    <td className="py-2.5 px-4 text-right text-slate-200">
+                    <td className="py-2 px-3 text-right text-slate-200">
                       {(ev.supervised_confidence * 100).toFixed(1)}%
+                    </td>
+                    <td className="py-2 px-3 text-right text-slate-300">
+                      {ev.predictive_entropy.toFixed(3)}
+                    </td>
+                    <td className="py-2 px-3 text-right text-amber-300/90">
+                      {ev.anomaly_score.toFixed(3)} (p
+                      {ev.anomaly_percentile.toFixed(1)})
+                    </td>
+                    <td className="py-2 px-4 text-slate-400 max-w-xs truncate">
+                      {ev.rationale_text}
                     </td>
                   </tr>
                 ))}
