@@ -194,10 +194,7 @@ export const ElectronCanvasBackground: React.FC = () => {
       'rgba(139, 148, 158, 0.42)',
     ];
 
-    const initialCount = Math.min(
-      145,
-      Math.max(85, Math.floor((canvas.width * canvas.height) / 12000))
-    );
+    const initialCount = 60;
     setElectronCount(initialCount);
 
     const particles: StarElectron[] = Array.from(
@@ -228,11 +225,11 @@ export const ElectronCanvasBackground: React.FC = () => {
         color: '#79c0ff',
       });
 
-      // Spawn 6 gentle electrons radiating outward from click/burst point
-      for (let k = 0; k < 6; k++) {
-        const angle = (Math.PI * 2 * k) / 6 + Math.random() * 0.4;
+      // Spawn 5 gentle electrons radiating outward from click/burst point (capped at 75 total)
+      for (let k = 0; k < 5; k++) {
+        const angle = (Math.PI * 2 * k) / 5 + Math.random() * 0.4;
         const spd = 0.45 + Math.random() * 0.45;
-        if (particles.length > 210) {
+        if (particles.length >= 75) {
           particles.shift();
         }
         particles.push({
@@ -240,7 +237,7 @@ export const ElectronCanvasBackground: React.FC = () => {
           y: cy,
           vx: Math.cos(angle) * spd,
           vy: Math.sin(angle) * spd,
-          radius: 2.1,
+          radius: 1.9,
           color: starPalette[k % starPalette.length],
           phase: 0,
         });
@@ -261,12 +258,10 @@ export const ElectronCanvasBackground: React.FC = () => {
     window.addEventListener('click', handleWindowClick);
 
     const mouseRadiusSq = mouse.radius * mouse.radius;
-    const linkDist = 132;
+    const linkDist = 115;
     const linkDistSq = linkDist * linkDist;
-    let tickCount = 0;
 
     const animate = () => {
-      tickCount += 1;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const sMult = speedRef.current;
@@ -287,10 +282,12 @@ export const ElectronCanvasBackground: React.FC = () => {
         }
       }
 
-      // 2. Update & draw floating electrons
+      // 2. Update & batch-draw floating electrons in 1 single fill call
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(201, 209, 217, 0.42)';
+
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        p.phase += 0.04;
         p.x += p.vx * sMult;
         p.y += p.vy * sMult;
 
@@ -335,15 +332,15 @@ export const ElectronCanvasBackground: React.FC = () => {
           p.vy = -Math.abs(p.vy);
         }
 
-        // Steady radius (no flashing or throbbing size pulse)
-        ctx.beginPath();
+        ctx.moveTo(p.x + p.radius, p.y);
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
       }
+      ctx.fill();
 
-      // 3. Draw Subtle Monochrome Constellation Filaments (No Flashing White Dots)
-      ctx.lineWidth = 0.65;
+      // 3. Batch-draw Subtle Monochrome Constellation Filaments in 1 single stroke call
+      ctx.beginPath();
+      ctx.lineWidth = 0.6;
+      ctx.strokeStyle = 'rgba(201, 209, 217, 0.08)';
 
       for (let i = 0; i < particles.length; i++) {
         const pi = particles[i];
@@ -356,15 +353,12 @@ export const ElectronCanvasBackground: React.FC = () => {
 
           const distSq = dx * dx + dy * dy;
           if (distSq < linkDistSq) {
-            const alpha = (1 - distSq / linkDistSq) * 0.14;
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(201, 209, 217, ${alpha.toFixed(3)})`;
             ctx.moveTo(pi.x, pi.y);
             ctx.lineTo(pj.x, pj.y);
-            ctx.stroke();
           }
         }
       }
+      ctx.stroke();
 
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -458,7 +452,7 @@ export const TerminalBackground: React.FC = () => {
       const randomCmd = commands[Math.floor(Math.random() * commands.length)];
       const timestamp = new Date().toISOString().split('T')[1].substring(0, 8);
       setLogs((prev) => [...prev.slice(-8), `> [${timestamp}] ${randomCmd}`]);
-    }, 1800);
+    }, 4500);
 
     return () => clearInterval(interval);
   }, []);
@@ -473,15 +467,20 @@ export const TerminalBackground: React.FC = () => {
 };
 
 /**
- * 3. GradeGuide TypewriterText Component with Continuous Loop & Blinking Block Cursor (`█`)
+ * 3. GradeGuide TypewriterText Component with Blinking Block Cursor (`█`)
  */
 export const TypewriterText: React.FC<{
   text: string;
   delay?: number;
   className?: string;
-}> = ({ text, delay = 35, className = '' }) => {
+}> = ({ text, delay = 40, className = '' }) => {
   const [currentText, setCurrentText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    setCurrentText('');
+    setCurrentIndex(0);
+  }, [text]);
 
   useEffect(() => {
     if (currentIndex < text.length) {
@@ -490,13 +489,6 @@ export const TypewriterText: React.FC<{
         setCurrentIndex((prev) => prev + 1);
       }, delay);
       return () => clearTimeout(timeout);
-    } else {
-      // Loop typewriter animation every 12 seconds so it stays alive
-      const resetTimer = setTimeout(() => {
-        setCurrentText('');
-        setCurrentIndex(0);
-      }, 12000);
-      return () => clearTimeout(resetTimer);
     }
   }, [currentIndex, delay, text]);
 
@@ -752,7 +744,7 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
                     : '1px solid rgba(255,255,255,0.04)',
                 outlineOffset: '-1px',
               }}
-              className={`${val > 0 ? 'squish-cell' : ''} cursor-pointer`}
+              className={`squish-cell ${val === 4 ? 'squish-cell-peak' : ''} cursor-pointer`}
               title={`Click to inspect Window #${i + 1}: ${val * 18} flows verified`}
             />
           );
@@ -763,40 +755,10 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
 };
 
 /**
- * 7. Zero-Thrash Cursor Spotlight Engine
+ * 7. Zero-Thrash Cursor Spotlight Engine (Disabled per-frame DOM style mutation for 60fps smoothness)
  */
 export const useGlobalGlassCursorEngine = () => {
-  useEffect(() => {
-    let rafId = 0;
-    let activeCard: HTMLElement | null = null;
-
-    const handlePointerMove = (e: MouseEvent) => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const target = e.target as HTMLElement | null;
-        if (!target) return;
-        const card = target.closest<HTMLElement>(
-          'main .bg-\\[\\#0d1117\\], .spotlight-wrapper'
-        );
-        if (activeCard && activeCard !== card) {
-          activeCard.style.setProperty('--mouse-x', '-999px');
-          activeCard.style.setProperty('--mouse-y', '-999px');
-        }
-        if (card) {
-          const rect = card.getBoundingClientRect();
-          card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-          card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-          activeCard = card;
-        }
-      });
-    };
-
-    window.addEventListener('mousemove', handlePointerMove, { passive: true });
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('mousemove', handlePointerMove);
-    };
-  }, []);
+  // No-op: removed per-frame getBoundingClientRect() + CSS variable radial-gradient repaints
 };
 
 /**
