@@ -199,51 +199,71 @@ export const OverviewScreen: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Interactive Proportional Traffic Composition Strip */}
-        <div className="px-4 py-2 bg-[#090c10] border-t border-white/[0.07] flex items-center gap-3">
+        {/* Liquid Sloshing & Shaking Proportional Traffic Composition Bar */}
+        <div className="px-4 py-2.5 bg-[#090c10] border-t border-white/[0.07] flex items-center gap-3">
           <span className="text-[10px] font-mono text-slate-400 shrink-0">
             COMPOSITION
           </span>
-          <div className="h-2 flex-1 bg-slate-900 rounded-[1px] overflow-hidden flex gap-[1px]">
+          <div className="h-3.5 flex-1 bg-slate-950 liquid-tube flex gap-[1px] p-[1px]">
             <div
-              style={{ width: `${knownPct}%` }}
-              className={`bg-red-500 h-full transition-all duration-300 ${
+              style={{
+                width: `${knownPct}%`,
+                backgroundImage:
+                  'linear-gradient(90deg, #dc2626, #f87171, #ef4444)',
+              }}
+              className={`liquid-segment h-full rounded-l-full transition-all duration-300 ${
                 highlightedSegment &&
                 highlightedSegment !== 'ALL' &&
                 highlightedSegment !== 'KNOWN_ATTACK'
                   ? 'opacity-25'
                   : 'opacity-100'
               }`}
+              title={`Known Attacks: ${knownPct.toFixed(1)}%`}
             />
             <div
-              style={{ width: `${anomPct}%` }}
-              className={`bg-amber-400 h-full transition-all duration-300 ${
+              style={{
+                width: `${anomPct}%`,
+                backgroundImage:
+                  'linear-gradient(90deg, #d97706, #fbbf24, #f59e0b)',
+              }}
+              className={`liquid-segment h-full transition-all duration-300 ${
                 highlightedSegment &&
                 highlightedSegment !== 'ALL' &&
                 highlightedSegment !== 'ANOMALOUS_UNKNOWN'
                   ? 'opacity-25'
                   : 'opacity-100'
               }`}
+              title={`Open-Set Anomalies: ${anomPct.toFixed(1)}%`}
             />
             <div
-              style={{ width: `${uncPct}%` }}
-              className={`bg-sky-400 h-full transition-all duration-300 ${
+              style={{
+                width: `${uncPct}%`,
+                backgroundImage:
+                  'linear-gradient(90deg, #0284c7, #38bdf8, #79c0ff)',
+              }}
+              className={`liquid-segment h-full transition-all duration-300 ${
                 highlightedSegment &&
                 highlightedSegment !== 'ALL' &&
                 highlightedSegment !== 'UNCERTAIN'
                   ? 'opacity-25'
                   : 'opacity-100'
               }`}
+              title={`High Entropy / Uncertain: ${uncPct.toFixed(1)}%`}
             />
             <div
-              style={{ width: `${benignPct}%` }}
-              className={`bg-emerald-500/80 h-full transition-all duration-300 ${
+              style={{
+                width: `${benignPct}%`,
+                backgroundImage:
+                  'linear-gradient(90deg, #059669, #34d399, #10b981)',
+              }}
+              className={`liquid-segment h-full rounded-r-full transition-all duration-300 ${
                 highlightedSegment &&
                 highlightedSegment !== 'ALL' &&
                 highlightedSegment !== 'BENIGN'
                   ? 'opacity-25'
                   : 'opacity-100'
               }`}
+              title={`Benign Baseline: ${benignPct.toFixed(1)}%`}
             />
           </div>
         </div>
@@ -332,9 +352,9 @@ export const OverviewScreen: React.FC<Props> = ({
                         </span>
                       </span>
                     </div>
-                    <div className="h-2 w-full bg-[#07080c] rounded-[2px] overflow-hidden border border-white/[0.06]">
+                    <div className="h-2.5 w-full bg-[#07080c] liquid-tube overflow-hidden border border-white/[0.08]">
                       <div
-                        className={`h-full transition-all duration-500 ${sev.color}`}
+                        className={`h-full liquid-segment rounded-full transition-all duration-500 ${sev.color}`}
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
