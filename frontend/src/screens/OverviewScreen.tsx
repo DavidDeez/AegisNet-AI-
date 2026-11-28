@@ -199,19 +199,15 @@ export const OverviewScreen: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Liquid Sloshing & Shaking Proportional Traffic Composition Bar */}
-        <div className="px-4 py-2.5 bg-[#090c10] border-t border-white/[0.07] flex items-center gap-3">
+        {/* Colour-Squishing & Shaking Proportional Traffic Composition Bar */}
+        <div className="px-4 py-2 bg-[#090c10] border-t border-white/[0.07] flex items-center gap-3">
           <span className="text-[10px] font-mono text-slate-400 shrink-0">
             COMPOSITION
           </span>
-          <div className="h-3.5 flex-1 bg-slate-950 liquid-tube flex gap-[1px] p-[1px]">
+          <div className="h-2.5 flex-1 bg-slate-900 squish-bar-track flex items-center gap-[2px] px-0.5">
             <div
-              style={{
-                width: `${knownPct}%`,
-                backgroundImage:
-                  'linear-gradient(90deg, #dc2626, #f87171, #ef4444)',
-              }}
-              className={`liquid-segment h-full rounded-l-full transition-all duration-300 ${
+              style={{ width: `${knownPct}%` }}
+              className={`squish-color-segment-even h-full rounded-full bg-red-500 transition-all duration-300 ${
                 highlightedSegment &&
                 highlightedSegment !== 'ALL' &&
                 highlightedSegment !== 'KNOWN_ATTACK'
@@ -221,12 +217,8 @@ export const OverviewScreen: React.FC<Props> = ({
               title={`Known Attacks: ${knownPct.toFixed(1)}%`}
             />
             <div
-              style={{
-                width: `${anomPct}%`,
-                backgroundImage:
-                  'linear-gradient(90deg, #d97706, #fbbf24, #f59e0b)',
-              }}
-              className={`liquid-segment h-full transition-all duration-300 ${
+              style={{ width: `${anomPct}%` }}
+              className={`squish-color-segment-odd h-full rounded-full bg-amber-500 transition-all duration-300 ${
                 highlightedSegment &&
                 highlightedSegment !== 'ALL' &&
                 highlightedSegment !== 'ANOMALOUS_UNKNOWN'
@@ -236,12 +228,8 @@ export const OverviewScreen: React.FC<Props> = ({
               title={`Open-Set Anomalies: ${anomPct.toFixed(1)}%`}
             />
             <div
-              style={{
-                width: `${uncPct}%`,
-                backgroundImage:
-                  'linear-gradient(90deg, #0284c7, #38bdf8, #79c0ff)',
-              }}
-              className={`liquid-segment h-full transition-all duration-300 ${
+              style={{ width: `${uncPct}%` }}
+              className={`squish-color-segment-even h-full rounded-full bg-blue-400 transition-all duration-300 ${
                 highlightedSegment &&
                 highlightedSegment !== 'ALL' &&
                 highlightedSegment !== 'UNCERTAIN'
@@ -251,12 +239,8 @@ export const OverviewScreen: React.FC<Props> = ({
               title={`High Entropy / Uncertain: ${uncPct.toFixed(1)}%`}
             />
             <div
-              style={{
-                width: `${benignPct}%`,
-                backgroundImage:
-                  'linear-gradient(90deg, #059669, #34d399, #10b981)',
-              }}
-              className={`liquid-segment h-full rounded-r-full transition-all duration-300 ${
+              style={{ width: `${benignPct}%` }}
+              className={`squish-color-segment-odd h-full rounded-full bg-emerald-500 transition-all duration-300 ${
                 highlightedSegment &&
                 highlightedSegment !== 'ALL' &&
                 highlightedSegment !== 'BENIGN'

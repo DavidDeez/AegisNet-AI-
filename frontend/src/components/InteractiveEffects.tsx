@@ -567,7 +567,7 @@ export const MagneticButton: React.FC<{
 };
 
 /**
- * 5. GradeGuide ScoreRing Animated SVG Circular Gauge with Sloshing Liquid Wave Fill & Kinetic Shake
+ * 5. GradeGuide ScoreRing Animated SVG Circular Gauge with Liquid Colour Squishing & Shaking
  */
 export const ScoreRing: React.FC<{
   score: number;
@@ -580,7 +580,7 @@ export const ScoreRing: React.FC<{
   score,
   label,
   sublabel,
-  size = 96,
+  size = 94,
   strokeWidth = 7,
   color,
 }) => {
@@ -597,77 +597,23 @@ export const ScoreRing: React.FC<{
       ? '#79c0ff'
       : '#f85149');
 
-  const clipId = useMemo(
-    () => `liquid-clip-${label.replace(/[^a-zA-Z0-9]/g, '')}-${Math.round(clamped)}`,
-    [label, clamped]
-  );
-
-  // Liquid fill Y coordinate inside 100x100 viewBox (0 = top, 100 = bottom)
-  const liquidTopY = 100 - clamped;
-
   return (
-    <div className="flex items-center gap-3.5 liquid-gauge-card p-2 rounded-lg">
+    <div className="flex items-center gap-3.5 squish-ring-card p-1.5 rounded-lg">
       <div
         style={{ position: 'relative', width: size, height: size }}
         className="shrink-0"
       >
-        {/* Inner Sloshing Liquid Sphere SVG */}
-        <svg
-          viewBox="0 0 100 100"
-          className="absolute inset-0 w-full h-full pointer-events-none"
-        >
-          <defs>
-            <clipPath id={clipId}>
-              <circle cx="50" cy="50" r="39" />
-            </clipPath>
-          </defs>
-          <g clipPath={`url(#${clipId})`}>
-            {/* Back Sloshing Liquid Wave */}
-            <g
-              className="liquid-wave-svg-slow"
-              style={{ transformOrigin: '50px 50px' }}
-            >
-              <path
-                d={`M -100 ${liquidTopY} Q -75 ${liquidTopY - 6}, -50 ${liquidTopY} T 0 ${liquidTopY} T 50 ${liquidTopY} T 100 ${liquidTopY} T 150 ${liquidTopY} T 200 ${liquidTopY} V 120 H -100 Z`}
-                fill={activeColor}
-                fillOpacity="0.22"
-              />
-            </g>
-            {/* Front Sloshing Liquid Wave */}
-            <g
-              className="liquid-wave-svg"
-              style={{ transformOrigin: '50px 50px' }}
-            >
-              <path
-                d={`M -100 ${liquidTopY + 2} Q -75 ${liquidTopY + 8}, -50 ${liquidTopY + 2} T 0 ${liquidTopY + 2} T 50 ${liquidTopY + 2} T 100 ${liquidTopY + 2} T 150 ${liquidTopY + 2} T 200 ${liquidTopY + 2} V 120 H -100 Z`}
-                fill={activeColor}
-                fillOpacity="0.38"
-              />
-            </g>
-            {/* Top Glossy Meniscus Highlight */}
-            <ellipse
-              cx="50"
-              cy="24"
-              rx="22"
-              ry="7"
-              fill="rgba(255,255,255,0.12)"
-            />
-          </g>
-        </svg>
-
-        {/* Outer Ring Progress SVG */}
         <svg
           width={size}
           height={size}
-          style={{ transform: 'rotate(-90deg)' }}
-          className="relative z-10"
+          className="squish-ring-svg relative z-10"
         >
           <circle
             cx={size / 2}
             cy={size / 2}
             r={innerRadius}
             stroke={activeColor}
-            strokeOpacity="0.3"
+            strokeOpacity="0.22"
             strokeWidth={1}
             fill="none"
           />
@@ -693,7 +639,7 @@ export const ScoreRing: React.FC<{
           />
         </svg>
         <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <span className="text-xs font-mono font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+          <span className="text-xs font-mono font-bold text-white">
             {clamped.toFixed(1)}%
           </span>
         </div>
@@ -713,7 +659,7 @@ export const ScoreRing: React.FC<{
 };
 
 /**
- * 6. Interactive Liquid & Shaking GradeGuide ActivityHeatmap (90-Day Telemetry Matrix)
+ * 6. Interactive GradeGuide ActivityHeatmap (90-Day Telemetry Matrix) with Squishing & Shaking Colour Blocks
  */
 export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
   totalEvents,
@@ -737,19 +683,19 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
   }, [totalEvents]);
 
   const getColor = (val: number) => {
-    if (val === 0) return 'linear-gradient(135deg, #161b22, #1c222b)';
-    if (val === 1) return 'linear-gradient(135deg, #0e4429, #155d38)';
-    if (val === 2) return 'linear-gradient(135deg, #006d32, #008f42)';
-    if (val === 3) return 'linear-gradient(135deg, #26a641, #32c450)';
-    return 'linear-gradient(135deg, #39d353, #6bf280)';
+    if (val === 0) return '#161b22';
+    if (val === 1) return '#0e4429';
+    if (val === 2) return '#006d32';
+    if (val === 3) return '#26a641';
+    return '#39d353';
   };
 
   return (
-    <div className="bg-[#0d1117] p-4 space-y-2.5 liquid-matrix-container">
+    <div className="bg-[#0d1117] p-4 space-y-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-heading font-semibold text-[#c9d1d9] flex items-center gap-2">
           <Activity className="w-3.5 h-3.5 text-[#39d353]" />
-          Network Flow Inspection & Threat Triage Activity (90-Day Liquid Matrix)
+          Network Flow Inspection & Threat Triage Activity (90-Day Matrix)
         </h3>
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#8b949e]">
           {selectedCell ? (
@@ -762,8 +708,8 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
               {[0, 1, 2, 3, 4].map((lv) => (
                 <span
                   key={lv}
-                  style={{ background: getColor(lv) }}
-                  className="w-2.5 h-2.5 rounded-[3px] inline-block border border-white/10"
+                  style={{ backgroundColor: getColor(lv) }}
+                  className="w-2.5 h-2.5 rounded-[2px] inline-block border border-white/5"
                 />
               ))}
               <span>More</span>
@@ -777,14 +723,12 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
           display: 'grid',
           gridTemplateRows: 'repeat(7, 1fr)',
           gridAutoFlow: 'column',
-          gap: '5px',
+          gap: '4px',
         }}
-        className="overflow-x-auto py-1.5 px-1"
+        className="overflow-x-auto py-1"
       >
         {cells.map((val, i) => {
-          const row = i % 7;
-          const col = Math.floor(i / 7);
-          const delay = ((col * 0.09 + row * 0.06) % 2.4).toFixed(2);
+          const delay = ((i * 0.13) % 2.1).toFixed(2);
           return (
             <button
               type="button"
@@ -799,16 +743,16 @@ export const ActivityHeatmap: React.FC<{ totalEvents: number }> = ({
               style={{
                 width: '13px',
                 height: '13px',
-                background: getColor(val),
-                borderRadius: '3.5px',
+                backgroundColor: getColor(val),
+                borderRadius: '3px',
                 animationDelay: `${delay}s`,
                 outline:
                   selectedCell?.index === i
                     ? '1.5px solid #79c0ff'
-                    : '1px solid rgba(255,255,255,0.08)',
+                    : '1px solid rgba(255,255,255,0.04)',
                 outlineOffset: '-1px',
               }}
-              className="liquid-cell cursor-pointer"
+              className={`${val > 0 ? 'squish-cell' : ''} cursor-pointer`}
               title={`Click to inspect Window #${i + 1}: ${val * 18} flows verified`}
             />
           );
